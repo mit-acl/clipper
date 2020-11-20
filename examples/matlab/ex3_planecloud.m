@@ -11,8 +11,8 @@
 %       "for Robust Data Association," 2020
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear, clc;
-addpath(genpath('build/bindings/matlab'))
-addpath(genpath('matlab'))
+addpath(genpath('build/bindings/matlab')) % for building invariants
+addpath(genpath('matlab')) % for clipper algorithm
 %% Plane parameters segmented from two LiDAR scans
 
 D1 = [

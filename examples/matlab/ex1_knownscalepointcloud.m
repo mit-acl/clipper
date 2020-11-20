@@ -9,8 +9,8 @@
 %       "for Robust Data Association," 2020
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear, clc;
-addpath(genpath('build/bindings/matlab'))
-addpath(genpath('matlab'))
+addpath(genpath('build/bindings/matlab')) % for building invariants
+addpath(genpath('matlab')) % for clipper algorithm
 %% Generate model/target point cloud
 
 % blue point cloud
