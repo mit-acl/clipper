@@ -53,7 +53,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   std::map<std::string, std::function<void(clipper::invariants::KnownScalePointCloud::Params&,const void*)>> map;
   map = {
     {"sigma", [](auto& p, const void* v){ p.sigma = *(double*)v; }},
-    {"tau", [](auto& p, const void* v){ p.tau = *(double*)v; }},
+    {"epsilon", [](auto& p, const void* v){ p.epsilon = *(double*)v; }},
   };
 
   if (pStruct) {

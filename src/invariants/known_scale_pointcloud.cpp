@@ -82,7 +82,7 @@ double KnownScalePointCloud::scoreInvariantConsistency(
   const double mean = (l1 + l2) / 2;
   const double c = std::abs(l1 - l2);// / mean;
 
-  return (c<params_.tau) ? std::exp(-0.5*c*c/(params_.sigma*params_.sigma)) : 0;
+  return (c<params_.epsilon) ? std::exp(-0.5*c*c/(params_.sigma*params_.sigma)) : 0;
 }
 
 } // ns invariants

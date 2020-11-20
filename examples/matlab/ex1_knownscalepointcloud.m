@@ -1,10 +1,16 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CLIPPER Example: Synthetic point cloud registration w/ known scale
 %
+%   Before running this example, use cmake to build the required mex fcns.
+%   See README.md for more information.
 % 
-%
+% For more details, please see the article
+%   P.C. Lusk, K. Fathian, J.P. How, "CLIPPER: A Graph-Theoretic Framework
+%       "for Robust Data Association," 2020
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear, clc;
+addpath(genpath('build/bindings/matlab'))
+addpath(genpath('matlab'))
 %% Generate model/target point cloud
 
 % blue point cloud
@@ -40,9 +46,14 @@ A = [];
 
 %% Run CLIPPER
 
-[M, C, A] = clipper_knownscalepointcloud(D1, D2, A);
+params = struct;
+params.sigma = 0.01;
+params.epsilon = 0.06;
 
-[Ain, idx, u] = clipper_findcorrespondences(M, C, A);
+[M, C, A] = clipper_knownscalepointcloud(D1, D2, A, params);
+
+[u, idx, ~] = clipper(M, C);
+Ain = A(idx,:);
 
 %% Plot input point clouds
 

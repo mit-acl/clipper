@@ -79,7 +79,7 @@ double PlaneCloud::scoreInvariantConsistency(
 
   const double c = std::abs(alpha1 - alpha2);
 
-  return (c<params_.tau) ? std::exp(-0.5*c*c/(params_.sigma*params_.sigma)) : 0;
+  return (c<params_.epsilon) ? std::exp(-0.5*c*c/(params_.sigma*params_.sigma)) : 0;
 }
 
 } // ns invariants

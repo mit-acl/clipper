@@ -25,7 +25,7 @@ namespace invariants {
   public:
     struct Params {
       double sigma = 0.01; ///< spread of exponential scoring ("variance")
-      double tau = 0.06; ///< bound on consistency score, determines if inlier/outlier
+      double epsilon = 0.06; ///< bound on consistency score, determines if inlier/outlier
     };
     using Data = Eigen::MatrixXd;
   public:

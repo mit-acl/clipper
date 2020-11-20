@@ -1,10 +1,18 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CLIPPER Example: Plane cloud registration
 %
-%    Uses planes extracted from two LiDAR scans with <50% overlap 
+%   Uses planes extracted from two real LiDAR scans with <50% overlap.
 %
+%   Before running this example, use cmake to build the required mex fcns.
+%   See README.md for more information.
+%
+% For more details, please see the article
+%   P.C. Lusk, K. Fathian, J.P. How, "CLIPPER: A Graph-Theoretic Framework
+%       "for Robust Data Association," 2020
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear, clc;
+addpath(genpath('build/bindings/matlab'))
+addpath(genpath('matlab'))
 %% Plane parameters segmented from two LiDAR scans
 
 D1 = [
@@ -68,15 +76,15 @@ axis([-50 50 -50 50 -10 10])
 A = [];
 
 %% Run CLIPPER
+params = struct;
 params.sigma = deg2rad(1.5);
-params.sigma_bound = 1;
+params.epsilon = 1;
 [M, C, A] = clipper_planecloud(D1, D2, A, params);
 
-%%
+[u, idx, ~] = clipper(M, C);
+Ain = A(idx,:);
 
-[Ain, idx, u] = clipper_findcorrespondences(M, C, A);
-
-% check returned correspondences
+%% check returned correspondences
 [~,idxAgt] = sort(Agt(:,1));
 [~,idxAin] = sort(Ain(:,1));
 correct = norm(Ain(idxAin,:) - Agt(idxAgt,:))==0;
