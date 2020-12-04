@@ -23,7 +23,7 @@
 % For more details, please see the article
 %   P.C. Lusk, K. Fathian, J.P. How, "CLIPPER: A Graph-Theoretic Framework
 %       "for Robust Data Association," 2020
-function [u, idx, omega] = clipper(M, C)
+function [u, idx, omega] = clipper(M, C, u0inp)
 %% Check input format
 
 n = length(M); % input size
