@@ -3,6 +3,7 @@
  * @brief Scores geometric invariants of a point cloud with known scale
  * @author Parker Lusk <plusk@mit.edu>
  * @date 3 October 2020
+ * @copyright Copyright MIT, Ford Motor Company (c) 2020-2021
  */
 
 #include <iostream>

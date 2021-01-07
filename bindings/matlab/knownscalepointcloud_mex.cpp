@@ -3,6 +3,7 @@
  * @brief MATLAB/MEX for scoring invariants for known scale point cloud reg
  * @author Parker Lusk <plusk@mit.edu>
  * @date 5 October 2020
+ * @copyright Copyright MIT, Ford Motor Company (c) 2020-2021
  */
 
 #include <iostream>

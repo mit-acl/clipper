@@ -9,6 +9,8 @@
 % For more details, please see the article
 %   P.C. Lusk, K. Fathian, J.P. How, "CLIPPER: A Graph-Theoretic Framework
 %       "for Robust Data Association," 2020
+%
+% Copyright MIT, Ford Motor Company (c) 2020-2021
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear, clc;
 addpath(genpath('build/bindings/matlab')) % for building invariants
