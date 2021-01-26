@@ -33,6 +33,8 @@ find_package(OpenMP)
 ###############################################################################
 
 add_library(clipper SHARED
+  src/find_dense_cluster.cpp
+  src/utils.cpp
   src/invariants/known_scale_pointcloud.cpp
   src/invariants/planecloud.cpp)
 target_link_libraries(clipper PUBLIC Eigen3::Eigen)
@@ -47,4 +49,9 @@ target_include_directories(clipper PUBLIC
 if(BUILD_BINDINGS_MATLAB)
     message(STATUS "Attempting to build MATLAB bindings.")
     add_subdirectory(bindings/matlab)
+endif()
+
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(test)
 endif()
