@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(clipper)
+project(clipper VERSION 0.1)
 
 set(CMAKE_CXX_STANDARD 14)
 if(NOT CMAKE_BUILD_TYPE)
@@ -67,6 +67,7 @@ add_library(clipper SHARED
 target_link_libraries(clipper PUBLIC Eigen3::Eigen)
 target_link_libraries(clipper PRIVATE OpenMP::OpenMP_CXX)
 target_include_directories(clipper PUBLIC
+    $<INSTALL_INTERFACE:include>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
 
 if(MKL_FOUND)
@@ -91,3 +92,36 @@ if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)
 endif()
+
+###############################################################################
+# Install
+###############################################################################
+
+include(GNUInstallDirs)
+set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/clipper)
+
+install(TARGETS clipper
+    EXPORT clipper-targets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+install(EXPORT clipper-targets
+  FILE clipper-targets.cmake
+  DESTINATION ${INSTALL_CONFIGDIR})
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/clipper-config-version.cmake
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY AnyNewerVersion)
+
+configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/clipper-config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/clipper-config.cmake
+  INSTALL_DESTINATION ${INSTALL_CONFIGDIR})
+
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/clipper-config.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/clipper-config-version.cmake
+  DESTINATION ${INSTALL_CONFIGDIR})

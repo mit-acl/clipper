@@ -1,0 +1,14 @@
+# - Config file for the clipper package
+# It defines the following variables
+#  CLIPPER_LIBRARIES    - libraries to link against
+
+# Compute paths
+get_filename_component(ADAPTNOTCH_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+# Our library dependencies (contains definitions for IMPORTED targets)
+if(NOT TARGET clipper)
+  include("${ADAPTNOTCH_CMAKE_DIR}/clipper-targets.cmake")
+endif()
+
+# These are IMPORTED targets created by clipper-targets.cmake
+set(CLIPPER_LIBRARIES clipper)
