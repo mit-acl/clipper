@@ -20,16 +20,24 @@
 #include "clipper/find_dense_cluster.h"
 #include "clipper/utils.h"
 
-#define PRINT_TIME(msg) { \
-  const auto t2 = std::chrono::high_resolution_clock::now(); \
-  const auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1); \
-  const double elapsed = static_cast<double>(duration.count()) / 1e9; \
-  std::cout << "[" << msg << "] : " << elapsed << std::endl; \
-}
-
 namespace clipper {
 
 using SpMat = Eigen::SparseMatrix<double>;
+
+
+inline void homotopy(Eigen::MatrixXd& Md, const Eigen::MatrixXd& M, const Eigen::MatrixXd& Cb, double d)
+{
+  // if (M.cols() < 2600) {
+    Md = M - d*Cb;
+  //   return;
+  // }
+
+// #pragma omp parallel for default(none) shared(Md, M, d, Cb)
+//   for (size_t c=0; c<M.cols(); ++c) {
+//     Md.col(c) = M.col(c) - d*Cb.col(c);
+//   }
+}
+
 
 template <typename T, typename std::enable_if_t<std::is_base_of<Eigen::EigenBase<T>, T>::value, int> = 0>
 Solution findDenseCluster(const T& _M, const T& C,
@@ -42,14 +50,14 @@ Solution findDenseCluster(const T& _M, const T& C,
   const size_t n = _M.cols();
 
   // Zero out any entry corresponding to an active constraint
-  const T M = _M.cwiseProduct(C);
+  const Eigen::MatrixXd M = _M.cwiseProduct(C);
 
   // Binary complement of constraint matrix
-  const T Cb = Eigen::MatrixXd::Ones(n,n) - C;
+  const Eigen::MatrixXd Cb = Eigen::MatrixXd::Ones(n,n) - C;
 
   // one step of power method to have a good scaling of u
-  Eigen::VectorXd u = (M * u0) / u0.squaredNorm();
-  // std::cout << "u(-1): " << u.transpose() << std::endl;
+  Eigen::VectorXd u = M * u0;
+  u /= u.norm();
 
   // initial value of d
   double d = 0; // zero if there are no active constraints
@@ -62,7 +70,15 @@ Solution findDenseCluster(const T& _M, const T& C,
     d = (num.array() / den.array()).minCoeff();
   }
 
-  Eigen::MatrixXd Md = M - d*Cb;
+  Eigen::MatrixXd Md = Eigen::MatrixXd(M.rows(), M.cols());
+  homotopy(Md, M, Cb, d);
+
+  // initialize memory
+  Eigen::VectorXd gradF = Eigen::VectorXd(n);
+  Eigen::VectorXd unew = Eigen::VectorXd(n);
+  Eigen::VectorXd Mu = Eigen::VectorXd(n);
+  Eigen::VectorXd num = Eigen::VectorXd(n);
+  Eigen::VectorXd den = Eigen::VectorXd(n);
 
   //
   // Orthogonal projected gradient ascent with homotopy
@@ -79,31 +95,36 @@ Solution findDenseCluster(const T& _M, const T& C,
     //
 
     for (j=0; j<params.maxiniters; ++j) {
-      const Eigen::VectorXd gradF = Md * u;
+      gradF = Md * u;
 
-      // orthogonal projection of gradient onto tangent plane to S^n at u
-      const Eigen::VectorXd gradFop = gradF - (gradF.transpose() * u) * u;
+      // if (params.orthogonal) {
+      //   // orthogonal projection of gradient onto tangent plane to S^n at u
+      //   gradF = gradF - (gradF.transpose() * u) * u;
 
-      if (gradFop.norm() < params.tol_Fop) break;
+      //   if (gradF.norm() < params.tol_Fop) break;
+      // }
 
-      double alpha = 0;
-      const auto idxA = ((gradFop.array()<-params.eps) && (u.array()>params.eps));
-      if (idxA.sum()) {
-        const Eigen::VectorXd num = idxA.select(u, std::numeric_limits<double>::infinity());
-        const Eigen::VectorXd den = idxA.select(gradFop, 1);
-        alpha = (num.array() / den.array()).abs().minCoeff();
-      } else {
-        alpha = std::pow(1.0/params.beta, 3) / gradFop.norm();
-      }
+      // double alpha = params.alpha;
+      // if (alpha <= 0) {
+      //   const auto idxA = ((gradF.array()<-params.eps) && (u.array()>params.eps));
+      //   if (idxA.sum()) {
+      //     const Eigen::VectorXd num = idxA.select(u, std::numeric_limits<double>::infinity());
+      //     const Eigen::VectorXd den = idxA.select(gradF, 1);
+      //     alpha = (num.array() / den.array()).abs().minCoeff();
+      //   } else {
+      //     alpha = std::pow(1.0/params.beta, 3) / gradF.norm();
+      //   }
+      // }
+
+      double alpha = 1;
 
       //
       // Backtracking line search on gradient ascent
       //
 
       double Fnew = 0, deltaF = 0;
-      Eigen::VectorXd unew;
       for (k=0; k<params.maxlsiters; ++k) {
-        unew = u + alpha * gradFop;   // gradient step
+        unew = u + alpha * gradF;                     // gradient step
         unew = unew.cwiseMax(0);                      // project onto positive orthant
         unew.normalize();                             // project onto S^n
         Fnew = unew.transpose() * Md * unew;          // new objective value after step
@@ -133,13 +154,13 @@ Solution findDenseCluster(const T& _M, const T& C,
     Cbu = Cb * u;
     const auto idxD = ((Cbu.array() > params.eps) && (u.array() > params.eps));
     if (idxD.sum() > 0) {
-      Eigen::MatrixXd Mu = M * u;
-      const Eigen::VectorXd num = idxD.select(Mu, std::numeric_limits<double>::infinity());
-      const Eigen::VectorXd den = idxD.select(Cbu, 1);
+      Mu = M * u;
+      num = idxD.select(Mu, std::numeric_limits<double>::infinity());
+      den = idxD.select(Cbu, 1);
       const double deltad = (num.array() / den.array()).abs().minCoeff();
 
       d += deltad;
-      Md = M - d*Cb;
+      homotopy(Md, M, Cb, d);
 
     } else {
       break;
@@ -154,7 +175,6 @@ Solution findDenseCluster(const T& _M, const T& C,
   const int omega = std::round(F);
 
   // extract indices of nodes in identified dense cluster
-  // t1 = std::chrono::high_resolution_clock::now();
   std::vector<int> I = utils::findIndicesOfkLargest(u, omega);
 
   Solution soln;
@@ -162,7 +182,6 @@ Solution findDenseCluster(const T& _M, const T& C,
   std::swap(soln.nodes, I);
   soln.u.swap(u);
   soln.score = F;
-  // PRINT_TIME("Output");
 
   return soln;
 }

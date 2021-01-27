@@ -8,7 +8,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose build type." FORCE)
 endif()
 
-# set(CMAKE_CXX_FLAGS "-Wall -march=native -mavx -mfma")
+set(CMAKE_CXX_FLAGS "-march=native -mavx -mfma")
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
@@ -18,6 +18,12 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 option(BUILD_BINDINGS_MATLAB "Build MATLAB bindings" ON)
 option(BUILD_TESTS "Build testsuite" ON)
+option(ENABLE_MKL "Use MKL with Eigen" OFF)
+option(ENABLE_BLAS "Use BLAS with Eigen" OFF) # apt install libopenblas-dev
+
+if(ENABLE_MKL AND ENABLE_BLAS)
+  message(FATAL_ERROR "Cannot enable both MKL and BLAS (prefer MKL)")
+endif()
 
 ###############################################################################
 # Dependencies
@@ -27,6 +33,27 @@ find_package(Eigen3 REQUIRED)
 message(STATUS "Eigen Version: ${EIGEN3_VERSION_STRING} ${EIGEN3_VERSION}")
 
 find_package(OpenMP)
+
+# Give preference to MKL
+if(ENABLE_MKL)
+    find_package(MKL)
+    if(MKL_FOUND)
+        message(STATUS "MKL found at: ${MKL_LIBRARIES}")
+    else()
+        message(STATUS "MKL not found.")
+    endif()
+endif()
+
+if(ENABLE_BLAS)
+    # OpenBLAS is generally better than ATLAS
+    set(BLA_VENDOR OpenBLAS)
+    find_package(BLAS)
+    if(BLAS_FOUND)
+        message(STATUS "BLAS found at: ${BLAS_LIBRARIES}")
+    else()
+        message(STATUS "BLAS not found.")
+    endif()
+endif()
 
 ###############################################################################
 # Targets
@@ -41,6 +68,15 @@ target_link_libraries(clipper PUBLIC Eigen3::Eigen)
 target_link_libraries(clipper PRIVATE OpenMP::OpenMP_CXX)
 target_include_directories(clipper PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
+
+if(MKL_FOUND)
+    target_include_directories(clipper PRIVATE ${MKL_INCLUDE_DIR})
+    target_compile_definitions(clipper PRIVATE -DEIGEN_USE_MKL_ALL)
+    target_link_libraries(clipper PRIVATE ${MKL_LIBRARIES})
+elseif(BLAS_FOUND)
+    target_compile_definitions(clipper PRIVATE -DEIGEN_USE_BLAS=1)
+    target_link_libraries(clipper PRIVATE BLAS::BLAS)
+endif()
 
 ###############################################################################
 # Extras

@@ -31,6 +31,7 @@ Eigen::VectorXd randvec(size_t n)
 std::vector<int> findIndicesOfkLargest(const Eigen::VectorXd& x, int k)
 {
   using T = std::pair<double, int>; // pair value to be compared and index
+  if (k < 1) return {}; // invalid input
   // n.b., the top of this queue is smallest element
   std::priority_queue<T, std::vector<T>, std::greater<T>> q;
   for (size_t i=0; i<x.rows(); ++i) {

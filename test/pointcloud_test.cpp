@@ -11,6 +11,7 @@
 #include <Eigen/Geometry>
 
 #include <clipper/clipper.h>
+#include <clipper/find_dense_cluster.h>
 #include <clipper/invariants/builtins.h>
 
 TEST(PointCloud, KnownScaleInvariant) {
@@ -112,6 +113,8 @@ TEST(PointCloud, KnownScale) {
 
   // instantiate the invariant function that will be used to score associations
   clipper::invariants::KnownScalePointCloud::Params iparams;
+  iparams.sigma = 0.01;
+  iparams.epsilon = 0.06;
   clipper::invariants::KnownScalePointCloud invariant(iparams);
 
   //
@@ -221,7 +224,8 @@ TEST(PointCloud, LargePointCloud) {
 
   clipper::Params params;
   clipper::invariants::KnownScalePointCloud::Params iparams;
-  iparams.sigma = 0.01;
+  iparams.sigma = 0.015;
+  iparams.epsilon = 0.02;
   clipper::CLIPPER<clipper::invariants::KnownScalePointCloud> clipper(params, iparams);
 
   //
@@ -230,7 +234,7 @@ TEST(PointCloud, LargePointCloud) {
 
   // create a target/model point cloud of data
   clipper::invariants::KnownScalePointCloud::Data model;
-  model = 5*clipper::invariants::KnownScalePointCloud::Data::Random(3, 30);
+  model = 5*clipper::invariants::KnownScalePointCloud::Data::Random(3, 32);
 
   // transform of data w.r.t model
   Eigen::Affine3d T_MD;
