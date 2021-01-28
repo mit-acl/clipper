@@ -8,8 +8,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose build type." FORCE)
 endif()
 
-set(CMAKE_CXX_FLAGS "-march=native -mavx -mfma")
-
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 ###############################################################################
@@ -69,6 +67,7 @@ target_link_libraries(clipper PRIVATE OpenMP::OpenMP_CXX)
 target_include_directories(clipper PUBLIC
     $<INSTALL_INTERFACE:include>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
+target_compile_options(clipper PUBLIC -march=native -mavx -mfma)
 
 if(MKL_FOUND)
     target_include_directories(clipper PRIVATE ${MKL_INCLUDE_DIR})
