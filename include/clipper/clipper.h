@@ -25,7 +25,7 @@ namespace clipper {
    *
    * @return     The subset of associations deemed as inliers via solution
    */
-  Association selectInlierAssociations(const Solution& soln, const Association& A)
+  inline Association selectInlierAssociations(const Solution& soln, const Association& A)
   {
     Association Ainliers = Association::Zero(soln.nodes.size(), 2);
     for (size_t i=0; i<soln.nodes.size(); ++i) {
