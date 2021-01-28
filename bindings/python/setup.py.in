@@ -1,0 +1,12 @@
+from setuptools import setup
+
+setup(
+    name='clipper',
+    version='0.1',
+    author='Parker Lusk',
+    author_email='plusk@mit.edu',
+    description='Robust data association framework',
+    package_dir={'': '${CMAKE_CURRENT_BINARY_DIR}'},
+    packages=['clipper'],
+    package_data={'': ['*.so']}
+)

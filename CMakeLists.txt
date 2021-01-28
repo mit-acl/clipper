@@ -14,6 +14,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 # Options
 ###############################################################################
 
+option(BUILD_BINDINGS_PYTHON "Build Python bindings" ON)
 option(BUILD_BINDINGS_MATLAB "Build MATLAB bindings" ON)
 option(BUILD_TESTS "Build testsuite" ON)
 option(ENABLE_MKL "Use MKL with Eigen" OFF)
@@ -53,6 +54,14 @@ if(ENABLE_BLAS)
     endif()
 endif()
 
+if(BUILD_BINDINGS_PYTHON)
+  set(PYBIND11_DIR "${CMAKE_CURRENT_BINARY_DIR}/pybind11-download" CACHE INTERNAL "pybind11 build dir" FORCE)
+  configure_file(${CMAKE_MODULE_PATH}/pybind11.cmake.in ${PYBIND11_DIR}/CMakeLists.txt IMMEDIATE @ONLY)
+  execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" . WORKING_DIRECTORY ${PYBIND11_DIR})
+  execute_process(COMMAND "${CMAKE_COMMAND}" --build . WORKING_DIRECTORY ${PYBIND11_DIR})
+  add_subdirectory(${PYBIND11_DIR}/src)
+endif()
+
 ###############################################################################
 # Targets
 ###############################################################################
@@ -81,6 +90,11 @@ endif()
 ###############################################################################
 # Extras
 ###############################################################################
+
+if(BUILD_BINDINGS_PYTHON)
+    message(STATUS "Building Python bindings.")
+    add_subdirectory(bindings/python)
+endif()
 
 if(BUILD_BINDINGS_MATLAB)
     message(STATUS "Attempting to build MATLAB bindings.")
