@@ -13,6 +13,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
+#include <pybind11/stl.h>
 
 #include "clipper/clipper.h"
 #include "clipper/find_dense_cluster.h"
@@ -42,7 +43,8 @@ void pybind_invariants(py::module& m)
 
   py::class_<KnownScalePointCloud>(m, "KnownScalePointCloud")
     .def(py::init<const KnownScalePointCloud::Params&>())
-    .def("create_affinity_matrix", &KnownScalePointCloud::createAffinityMatrix);
+    .def("create_affinity_matrix", &KnownScalePointCloud::createAffinityMatrix,
+      "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a);
 }
 
 PYBIND11_MODULE(clipper, m)
@@ -76,6 +78,7 @@ PYBIND11_MODULE(clipper, m)
        repr << "<CLIPPER dense cluster solution>";
        return repr.str();
     })
+    .def_readwrite("t", &clipper::Solution::t)
     .def_readwrite("ifinal", &clipper::Solution::ifinal)
     .def_readwrite("nodes", &clipper::Solution::nodes)
     .def_readwrite("u", &clipper::Solution::u)
@@ -84,10 +87,13 @@ PYBIND11_MODULE(clipper, m)
   m.def("find_dense_cluster",
     py::overload_cast<const Eigen::MatrixXd&, const Eigen::MatrixXd&,
           const clipper::Params&>(clipper::findDenseCluster<Eigen::MatrixXd>),
-    "M"_a, "C"_a, "params"_a);
+    "M"_a.noconvert(), "C"_a.noconvert(), "params"_a);
 
   m.def("find_dense_cluster",
     py::overload_cast<const Eigen::MatrixXd&, const Eigen::MatrixXd&, const Eigen::VectorXd&,
           const clipper::Params&>(clipper::findDenseCluster<Eigen::MatrixXd>),
-    "M"_a, "C"_a, "u0"_a, "params"_a);
+    "M"_a.noconvert(), "C"_a.noconvert(), "u0"_a, "params"_a);
+
+  m.def("select_inlier_associations", &clipper::selectInlierAssociations,
+    "soln"_a, "A"_a);
 }

@@ -41,6 +41,7 @@ namespace clipper {
    */
   struct Solution
   {
+    double t; ///< duration spent solving [s]
     int ifinal; ///< number of outer iterations before convergence
     std::vector<int> nodes; ///< indices of graph vertices in dense cluster
     Eigen::VectorXd u; ///< characteristic vector associated with graph

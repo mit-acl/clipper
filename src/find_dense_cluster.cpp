@@ -43,6 +43,7 @@ template <typename T, typename std::enable_if_t<std::is_base_of<Eigen::EigenBase
 Solution findDenseCluster(const T& _M, const T& C,
                           const Eigen::VectorXd& u0, const Params& params)
 {
+  const auto t1 = std::chrono::high_resolution_clock::now();
   //
   // Initialization
   //
@@ -177,7 +178,12 @@ Solution findDenseCluster(const T& _M, const T& C,
   // extract indices of nodes in identified dense cluster
   std::vector<int> I = utils::findIndicesOfkLargest(u, omega);
 
+  const auto t2 = std::chrono::high_resolution_clock::now();
+  const auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
+  const double elapsed = static_cast<double>(duration.count()) / 1e9;
+
   Solution soln;
+  soln.t = elapsed;
   soln.ifinal = i;
   std::swap(soln.nodes, I);
   soln.u.swap(u);
