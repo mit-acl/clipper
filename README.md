@@ -68,6 +68,44 @@ On Intel CPUs, MKL should be preferred as it offers superior performance over ot
 
 With MKL, we have found an almost 2x improvement in runtime over the MATLAB implementation. On an i9, the C++/MKL implementation can solve problems with 1000 associations in 70 ms.
 
+### Including in Another C++ Project
+
+A simple way to include `clipper` as a shared library in another C++ project is via `cmake`. This method will automatically clone and build `clipper`, making the resulting library accessible in your main project. In the project `CMakeLists.txt` you can add
+
+```cmake
+set(CLIPPER_DIR "${CMAKE_CURRENT_BINARY_DIR}/clipper-download" CACHE INTERNAL "CLIPPER build dir" FORCE)
+set(BUILD_BINDINGS_MATLAB OFF CACHE BOOL "")
+set(BUILD_TESTS OFF CACHE BOOL "")
+set(ENABLE_MKL OFF CACHE BOOL "")
+set(ENABLE_BLAS OFF CACHE BOOL "")
+configure_file(cmake/clipper.cmake.in ${CLIPPER_DIR}/CMakeLists.txt IMMEDIATE @ONLY)
+execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" . WORKING_DIRECTORY ${CLIPPER_DIR})
+execute_process(COMMAND "${CMAKE_COMMAND}" --build . WORKING_DIRECTORY ${CLIPPER_DIR})
+add_subdirectory(${CLIPPER_DIR}/src ${CLIPPER_DIR}/build)
+```
+
+where `cmake/clipper.cmake.in` looks like
+
+```cmake
+
+cmake_minimum_required(VERSION 3.10)
+project(clipper-download NONE)
+
+include(ExternalProject)
+ExternalProject_Add(clipper
+    GIT_REPOSITORY      "https://github.com/mit-acl/clipper"
+    GIT_TAG             master
+    SOURCE_DIR          "${CMAKE_CURRENT_BINARY_DIR}/src"
+    BINARY_DIR          "${CMAKE_CURRENT_BINARY_DIR}/build"
+    CONFIGURE_COMMAND   ""
+    BUILD_COMMAND       ""
+    INSTALL_COMMAND     ""
+    TEST_COMMAND        ""
+)
+```
+
+Then, you can link your project with `clipper` using the syntax `target_link_libraries(yourproject clipper)`.
+
 ---
 
 (c) MIT, Ford Motor Company, 2020-2021
