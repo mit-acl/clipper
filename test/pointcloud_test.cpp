@@ -233,8 +233,9 @@ TEST(PointCloud, LargePointCloud) {
   //
 
   // create a target/model point cloud of data
+  static constexpr int N = 32;
   clipper::invariants::KnownScalePointCloud::Data model;
-  model = 5*clipper::invariants::KnownScalePointCloud::Data::Random(3, 32);
+  model = 5*clipper::invariants::KnownScalePointCloud::Data::Random(3, N);
 
   // transform of data w.r.t model
   Eigen::Affine3d T_MD;
@@ -252,9 +253,9 @@ TEST(PointCloud, LargePointCloud) {
   // note that data types are specified by invariant class
   clipper::Association Ainliers = clipper.findCorrespondences(model, data);
 
-  // ASSERT_EQ(Ainliers.rows(), 3);
-  // for (size_t i=0; i<Ainliers.rows(); ++i) {
-  //   EXPECT_EQ(Ainliers(i, 0), Ainliers(i, 1));
-  // }
+  ASSERT_EQ(Ainliers.rows(), N);
+  for (size_t i=0; i<Ainliers.rows(); ++i) {
+    EXPECT_EQ(Ainliers(i, 0), Ainliers(i, 1));
+  }
 
 }
