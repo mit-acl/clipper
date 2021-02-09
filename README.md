@@ -35,6 +35,17 @@ $ make
 
 Once successful, the C++ tests can be run with `./test/tests`.
 
+### Python Bindings
+
+If Python bindings are built (see configuration options below), then the `clipper` Python module will need to be installed before using. This can be done with
+
+```bash
+$ cd build/bindings/python
+$ pip install .
+```
+
+A Python example notebook can be found in [`examples`](examples/python).
+
 ### Configuring the Build
 
 The following `cmake` options are available when building CLIPPER:
