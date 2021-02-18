@@ -46,6 +46,14 @@ $ pip install .
 
 A Python example notebook can be found in [`examples`](examples/python).
 
+### MATLAB Bindings
+
+If MATLAB is installed on your computer and MATLAB bindings are requested (see configuration options below), then `cmake` will attempt to find your MATLAB installation and subsequently generate a set of MEX files so that CLIPPER can be used in MATLAB.
+
+Note that in addition to the C++/MEX version of CLIPPER's dense cluster finder, we provide a reference MATLAB version of our projected gradient ascent approach to finding dense clusters.
+
+Please find MATLAB examples [`here`](examples/matlab).
+
 ### Configuring the Build
 
 The following `cmake` options are available when building CLIPPER:
