@@ -30,6 +30,10 @@ void pybind_invariants(py::module& m)
 
   using namespace clipper::invariants;
 
+  //
+  // Known Scale Point Cloud
+  //
+
   py::class_<KnownScalePointCloud::Params>(m, "KnownScalePointCloudParams")
     .def(py::init<>())
     .def("__repr__", [](const KnownScalePointCloud::Params &params) {
@@ -44,6 +48,19 @@ void pybind_invariants(py::module& m)
   py::class_<KnownScalePointCloud>(m, "KnownScalePointCloud")
     .def(py::init<const KnownScalePointCloud::Params&>())
     .def("create_affinity_matrix", &KnownScalePointCloud::createAffinityMatrix,
+      "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a);
+
+  //
+  // Plane Cloud
+  //
+
+  // since these params are actually the same abstract Invariant::Params,
+  // create an alias on the Python side.
+  m.attr("PlaneCloudParams") = m.attr("KnownScalePointCloudParams");
+
+  py::class_<PlaneCloud>(m, "PlaneCloud")
+    .def(py::init<const PlaneCloud::Params&>())
+    .def("create_affinity_matrix", &PlaneCloud::createAffinityMatrix,
       "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a);
 }
 
