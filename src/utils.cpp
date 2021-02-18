@@ -14,6 +14,8 @@
 
 #include <Eigen/Dense>
 
+#include "clipper/utils.h"
+
 namespace clipper {
 namespace utils {
 
@@ -50,6 +52,20 @@ std::vector<int> findIndicesOfkLargest(const Eigen::VectorXd& x, int k)
   }
 
   return indices;
+}
+
+// ----------------------------------------------------------------------------
+
+Association createAllToAll(size_t n1, size_t n2)
+{
+  Association A = Association(n1*n2, 2);
+  for (size_t i=0; i<n1; ++i) {
+    for (size_t j=0; j<n2; ++j) {
+      A(j + i*n2, 0) = i;
+      A(j + i*n2, 1) = j;
+    }
+  }
+  return A;
 }
 
 } // ns utils

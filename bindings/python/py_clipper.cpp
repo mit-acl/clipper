@@ -16,6 +16,7 @@
 #include <pybind11/stl.h>
 
 #include "clipper/clipper.h"
+#include "clipper/utils.h"
 #include "clipper/find_dense_cluster.h"
 #include "clipper/invariants/builtins.h"
 
@@ -29,6 +30,11 @@ void pybind_invariants(py::module& m)
             "build a consistency graph. Some built-in invariants are provided.";
 
   using namespace clipper::invariants;
+
+  m.def("create_all_to_all", clipper::utils::createAllToAll,
+    "n1"_a, "n2"_a,
+    "Create an all-to-all hypothesis for association. Useful for the case of"
+    " no prior information or putative associations.");
 
   //
   // Known Scale Point Cloud

@@ -8,6 +8,7 @@
 
 #include <iostream>
 
+#include "clipper/utils.h"
 #include "clipper/invariants/planecloud.h"
 
 namespace clipper {
@@ -29,7 +30,7 @@ static std::tuple<size_t,size_t> k2ij(size_t k, size_t n)
 
 PairMC PlaneCloud::createAffinityMatrix(const Data& D1, const Data& D2, Association& A)
 {
-  if (A.size() == 0) A = createAllToAll(D1.cols(), D2.cols());
+  if (A.size() == 0) A = utils::createAllToAll(D1.cols(), D2.cols());
 
   const size_t m = A.rows();
 

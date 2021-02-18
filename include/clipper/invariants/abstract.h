@@ -39,17 +39,6 @@ namespace invariants {
   protected:
     Params params_;
 
-    Association createAllToAll(size_t n1, size_t n2)
-    {
-      Association A = Association(n1*n2, 2);
-      for (size_t i=0; i<n1; ++i) {
-        for (size_t j=0; j<n2; ++j) {
-          A(j + i*n2, 0) = i;
-          A(j + i*n2, 1) = j;
-        }
-      }
-      return A;
-    }
   };
   
   using InvariantPtr = std::shared_ptr<Invariant>;
