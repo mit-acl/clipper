@@ -37,7 +37,7 @@ PairMC PlaneCloud::createAffinityMatrix(const Data& D1, const Data& D2, Associat
   Eigen::MatrixXd M = Eigen::MatrixXd::Zero(m,m);
   Eigen::MatrixXd C = Eigen::MatrixXd::Ones(m,m);
 
-#pragma omp parallel for default(none) shared(A, D1, D2, M, C)
+#pragma omp parallel for shared(A, D1, D2, M, C)
   for (size_t k=0; k<m*(m-1)/2; ++k) {
     size_t i, j; std::tie(i, j) = k2ij(k, m);
 
