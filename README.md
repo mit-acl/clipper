@@ -41,7 +41,7 @@ If Python bindings are built (see configuration options below), then the `clippe
 
 ```bash
 $ cd build/bindings/python
-$ pip install .
+$ python3 -m pip install . # 'python3 -m' ensures appropriate pip version is used
 ```
 
 A Python example notebook can be found in [`examples`](examples/python).
