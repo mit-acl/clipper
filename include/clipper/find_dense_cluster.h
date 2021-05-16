@@ -81,10 +81,7 @@ namespace clipper {
    */
   template <typename T, IsEigenBase<T> = true>
   Solution findDenseCluster(const T& M,
-    const T& C, const Params& params = Params())
-  {
-    return findDenseCluster(M, C, utils::randvec(M.cols()), params);
-  }
+    const T& C, const Params& params = Params());
 
   /**
    * @brief      Identifies a dense cluster of an undirected graph G.

@@ -39,7 +39,7 @@ inline void homotopy(Eigen::MatrixXd& Md, const Eigen::MatrixXd& M, const Eigen:
 }
 
 
-template <typename T, IsEigenBase<T> = true>
+template <typename T, IsEigenBase<T>>
 Solution findDenseCluster(const T& _M, const T& C,
                           const Eigen::VectorXd& u0, const Params& params)
 {
@@ -192,9 +192,21 @@ Solution findDenseCluster(const T& _M, const T& C,
   return soln;
 }
 
+template <typename T, IsEigenBase<T>>
+Solution findDenseCluster(const T& M, const T& C,
+                          const Params& params)
+{
+  return findDenseCluster(M, C, utils::randvec(M.cols()), params);
+}
+
+// template specializations for dense and sparse Eigen matrices
 template Solution findDenseCluster<Eigen::MatrixXd>(const Eigen::MatrixXd&,
             const Eigen::MatrixXd&, const Eigen::VectorXd&, const Params&);
 template Solution findDenseCluster<SpMat>(const SpMat&,
             const SpMat&, const Eigen::VectorXd&, const Params&);
+template Solution findDenseCluster<Eigen::MatrixXd>(const Eigen::MatrixXd&,
+            const Eigen::MatrixXd&, const Params&);
+template Solution findDenseCluster<SpMat>(const SpMat&,
+            const SpMat&, const Params&);
 
 } // ns clipper
