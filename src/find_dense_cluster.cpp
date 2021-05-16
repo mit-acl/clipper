@@ -39,7 +39,7 @@ inline void homotopy(Eigen::MatrixXd& Md, const Eigen::MatrixXd& M, const Eigen:
 }
 
 
-template <typename T, typename std::enable_if_t<std::is_base_of<Eigen::EigenBase<T>, T>::value, int> = 0>
+template <typename T, IsEigenBase<T> = true>
 Solution findDenseCluster(const T& _M, const T& C,
                           const Eigen::VectorXd& u0, const Params& params)
 {

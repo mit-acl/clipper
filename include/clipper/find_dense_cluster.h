@@ -49,6 +49,13 @@ namespace clipper {
   };
 
   /**
+   * @brief      SFINAE helper to allow only Eigen types - supports both
+   *             dense and sparse Eigen matrices.
+   */
+  template <typename T>
+  using IsEigenBase = std::enable_if_t<std::is_base_of<Eigen::EigenBase<T>, T>::value, bool>;
+
+  /**
    * @brief      Identifies a dense cluster of an undirected graph G from its
    *             weighted affinity matrix M while satisfying any active
    *             constraints in C (indicated with zeros).
@@ -72,7 +79,7 @@ namespace clipper {
    *
    * @return     Solutions structure containing dense cluster
    */
-  template <typename T, typename std::enable_if_t<std::is_base_of<Eigen::EigenBase<T>, T>::value, int> = 0>
+  template <typename T, IsEigenBase<T> = true>
   Solution findDenseCluster(const T& M,
     const T& C, const Params& params = Params())
   {
@@ -91,7 +98,7 @@ namespace clipper {
    *
    * @return     Solutions structure containing dense cluster
    */
-  template <typename T, typename std::enable_if_t<std::is_base_of<Eigen::EigenBase<T>, T>::value, int> = 0>
+  template <typename T, IsEigenBase<T> = true>
   Solution findDenseCluster(const T& M,
     const T& C, const Eigen::VectorXd& u0,
     const Params& params = Params());
