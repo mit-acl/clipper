@@ -3,7 +3,6 @@
  * @brief Python bindings for CLIPPER
  * @author Parker Lusk <plusk@mit.edu>
  * @date 28 January 2021
- * @copyright Copyright MIT, Ford Motor Company (c) 2020-2021
  */
 
 #include <cstdint>
@@ -17,7 +16,6 @@
 
 #include "clipper/clipper.h"
 #include "clipper/utils.h"
-#include "clipper/find_dense_cluster.h"
 #include "clipper/invariants/builtins.h"
 
 namespace py = pybind11;
@@ -31,43 +29,53 @@ void pybind_invariants(py::module& m)
 
   using namespace clipper::invariants;
 
-  m.def("create_all_to_all", clipper::utils::createAllToAll,
+  m.def("create_all_to_all", clipper::createAllToAll,
     "n1"_a, "n2"_a,
     "Create an all-to-all hypothesis for association. Useful for the case of"
     " no prior information or putative associations.");
 
   //
-  // Known Scale Point Cloud
+  // Base Invariants
   //
 
-  py::class_<KnownScalePointCloud::Params>(m, "KnownScalePointCloudParams")
+  py::class_<Invariant>(m, "Invariant");
+  py::class_<PairwiseInvariant, Invariant>(m, "PairwiseInvariant");
+
+  //
+  // Euclidean Distance
+  //
+
+  py::class_<EuclideanDistance::Params>(m, "EuclideanDistanceParams")
     .def(py::init<>())
-    .def("__repr__", [](const KnownScalePointCloud::Params &params) {
+    .def("__repr__", [](const EuclideanDistance::Params &params) {
        std::ostringstream repr;
-       repr << "<KnownScalePointCloudParams : sigma=" << params.sigma;
+       repr << "<EuclideanDistanceParams : sigma=" << params.sigma;
        repr << " epsilon=" << params.epsilon << ">";
        return repr.str();
     })
-    .def_readwrite("sigma", &clipper::invariants::KnownScalePointCloud::Params::sigma)
-    .def_readwrite("epsilon", &clipper::invariants::KnownScalePointCloud::Params::epsilon);
+    .def_readwrite("sigma", &clipper::invariants::EuclideanDistance::Params::sigma)
+    .def_readwrite("epsilon", &clipper::invariants::EuclideanDistance::Params::epsilon);
 
-  py::class_<KnownScalePointCloud>(m, "KnownScalePointCloud")
-    .def(py::init<const KnownScalePointCloud::Params&>())
-    .def("create_affinity_matrix", &KnownScalePointCloud::createAffinityMatrix,
-      "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a);
+  py::class_<EuclideanDistance, PairwiseInvariant>(m, "EuclideanDistance")
+    .def(py::init<const EuclideanDistance::Params&>());
 
   //
-  // Plane Cloud
+  // Plane Distance
   //
 
-  // since these params are actually the same abstract Invariant::Params,
-  // create an alias on the Python side.
-  m.attr("PlaneCloudParams") = m.attr("KnownScalePointCloudParams");
+  py::class_<PlaneDistance::Params>(m, "PlaneDistanceParams")
+    .def(py::init<>())
+    .def("__repr__", [](const PlaneDistance::Params &params) {
+       std::ostringstream repr;
+       repr << "<PlaneDistanceParams : sigma=" << params.sigma;
+       repr << " epsilon=" << params.epsilon << ">";
+       return repr.str();
+    })
+    .def_readwrite("sigma", &clipper::invariants::PlaneDistance::Params::sigma)
+    .def_readwrite("epsilon", &clipper::invariants::PlaneDistance::Params::epsilon);
 
-  py::class_<PlaneCloud>(m, "PlaneCloud")
-    .def(py::init<const PlaneCloud::Params&>())
-    .def("create_affinity_matrix", &PlaneCloud::createAffinityMatrix,
-      "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a);
+  py::class_<PlaneDistance, PairwiseInvariant>(m, "PlaneDistance")
+    .def(py::init<const PlaneDistance::Params&>());
 }
 
 PYBIND11_MODULE(clipper, m)
@@ -106,6 +114,10 @@ PYBIND11_MODULE(clipper, m)
     .def_readwrite("nodes", &clipper::Solution::nodes)
     .def_readwrite("u", &clipper::Solution::u)
     .def_readwrite("score", &clipper::Solution::score);
+
+  m.def("score_pairwise_consistency", clipper::scorePairwiseConsistency,
+    "invariant"_a, "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a,
+    "Scores consistency between pairs of associations in A");
 
   m.def("find_dense_cluster",
     py::overload_cast<const Eigen::MatrixXd&, const Eigen::MatrixXd&,

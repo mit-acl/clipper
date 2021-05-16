@@ -21,13 +21,13 @@ namespace invariants {
 
   class Invariant {
   public:
-    virtual ~Invariant() {}
+    virtual ~Invariant() = default;
   };
 
   class PairwiseInvariant : public Invariant
   {
   public:
-    virtual ~PairwiseInvariant() {}
+    virtual ~PairwiseInvariant() = default;
 
     virtual double operator()(const Datum& ai, const Datum& aj, const Datum& bi, const Datum& bj) = 0;
   };
