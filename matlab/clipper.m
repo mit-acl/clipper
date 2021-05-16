@@ -22,9 +22,8 @@
 %
 % For more details, please see the article
 %   P.C. Lusk, K. Fathian, J.P. How, "CLIPPER: A Graph-Theoretic Framework
-%       "for Robust Data Association," 2020
+%       "for Robust Data Association," ICRA 2021
 %
-% Copyright MIT, Ford Motor Company (c) 2020-2021
 function [u, idx, omega] = clipper(M, C, u0inp)
 %% Check input format
 

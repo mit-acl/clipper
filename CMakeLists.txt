@@ -66,11 +66,13 @@ endif()
 # Targets
 ###############################################################################
 
-add_library(clipper SHARED
+add_library(clipper SHARED)
+target_sources(clipper PRIVATE
   src/find_dense_cluster.cpp
+  src/affinity.cpp
   src/utils.cpp
-  src/invariants/known_scale_pointcloud.cpp
-  src/invariants/planecloud.cpp)
+  src/invariants/euclidean_distance.cpp
+  src/invariants/plane_distance.cpp)
 target_link_libraries(clipper PUBLIC Eigen3::Eigen)
 target_link_libraries(clipper PRIVATE OpenMP::OpenMP_CXX)
 target_include_directories(clipper PUBLIC

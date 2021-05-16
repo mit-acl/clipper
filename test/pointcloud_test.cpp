@@ -3,7 +3,6 @@
  * @brief Point Cloud CLIPPER tests
  * @author Parker Lusk <plusk@mit.edu>
  * @date 3 October 2020
- * @copyright Copyright MIT, Ford Motor Company (c) 2020-2021
  */
 
 #include <gtest/gtest.h>
@@ -21,16 +20,15 @@ TEST(PointCloud, KnownScaleInvariant) {
   //
 
   // instantiate the invariant function that will be used to score associations
-  clipper::invariants::KnownScalePointCloud::Params iparams;
-  clipper::invariants::KnownScalePointCloud invariant(iparams);
+  clipper::invariants::EuclideanDistance::Params iparams;
+  clipper::invariants::EuclideanDistance invariant(iparams);
 
   //
   // Data setup
   //
 
   // create a target/model point cloud of data
-  clipper::invariants::KnownScalePointCloud::Data model;
-  model.resize(3, 4);
+  Eigen::Matrix3Xd model(3, 4);
   model.col(0) << 0, 0, 0;
   model.col(1) << 2, 0, 0;
   model.col(2) << 0, 3, 0;
@@ -42,20 +40,20 @@ TEST(PointCloud, KnownScaleInvariant) {
   T_MD.translation() << 5, 3, 0;
 
   // create source/data point cloud
-  clipper::invariants::KnownScalePointCloud::Data data = T_MD.inverse() * model;
+  Eigen::Matrix3Xd data = T_MD.inverse() * model;
 
   // remove one point from the tgt (model) cloud---simulates a partial view
-  data.conservativeResize(3,3);
+  data.conservativeResize(3, 3);
 
   //
   // Identify data association
   //
 
-  // an empty association set will be assumed to be all-to-all (12 total)
+  // an empty association set is assumed to be all-to-all (12 total)
   clipper::Association A;
 
   Eigen::MatrixXd M, C;
-  std::tie(M, C) = invariant.createAffinityMatrix(model, data, A);
+  std::tie(M, C) = clipper::scorePairwiseConsistency(invariant, model, data, A);
 
   // A should be an all-to-all hypothesis
   const int n = model.cols() * data.cols();
@@ -112,18 +110,15 @@ TEST(PointCloud, KnownScale) {
   //
 
   // instantiate the invariant function that will be used to score associations
-  clipper::invariants::KnownScalePointCloud::Params iparams;
-  iparams.sigma = 0.01;
-  iparams.epsilon = 0.06;
-  clipper::invariants::KnownScalePointCloud invariant(iparams);
+  clipper::invariants::EuclideanDistance::Params iparams;
+  clipper::invariants::EuclideanDistance invariant(iparams);
 
   //
   // Data setup
   //
 
   // create a target/model point cloud of data
-  clipper::invariants::KnownScalePointCloud::Data model;
-  model.resize(3, 4);
+  Eigen::Matrix3Xd model(3, 4);
   model.col(0) << 0, 0, 0;
   model.col(1) << 2, 0, 0;
   model.col(2) << 0, 3, 0;
@@ -135,10 +130,10 @@ TEST(PointCloud, KnownScale) {
   T_MD.translation() << 5, 3, 0;
 
   // create source/data point cloud
-  clipper::invariants::KnownScalePointCloud::Data data = T_MD.inverse() * model;
+  Eigen::Matrix3Xd data = T_MD.inverse() * model;
 
   // remove one point from the tgt (model) cloud---simulates a partial view
-  data.conservativeResize(3,3);
+  data.conservativeResize(3, 3);
 
   //
   // Identify data association
@@ -147,11 +142,12 @@ TEST(PointCloud, KnownScale) {
   // an empty association set will be assumed to be all-to-all
   clipper::Association A;
 
+  // create affinity matrix
   Eigen::MatrixXd M, C;
-  std::tie(M, C) = invariant.createAffinityMatrix(model, data, A);
+  std::tie(M, C) = clipper::scorePairwiseConsistency(invariant, model, data, A);
 
-  clipper::Params params;
-  clipper::Solution soln = clipper::findDenseCluster(M, C, params);
+  // find the "densest clique"
+  clipper::Solution soln = clipper::findDenseCluster(M, C);
 
   clipper::Association Ainliers = clipper::selectInlierAssociations(soln, A);
 
@@ -171,19 +167,18 @@ TEST(PointCloud, KnownScaleConvenience) {
   //
 
   clipper::Params params;
-  clipper::invariants::KnownScalePointCloud::Params iparams;
+  clipper::invariants::EuclideanDistance::Params iparams;
 
   // instantiate the clipper object that will process incoming pairs of sensor
   // data to determine the outlier-free set of pairwise associations
-  clipper::CLIPPER<clipper::invariants::KnownScalePointCloud> clipper(params, iparams);
+  clipper::CLIPPER<clipper::invariants::EuclideanDistance> clipper(params, iparams);
 
   //
   // Data setup
   //
 
   // create a target/model point cloud of data
-  clipper::invariants::KnownScalePointCloud::Data model;
-  model.resize(3, 4);
+  Eigen::Matrix3Xd model(3, 4);
   model.col(0) << 0, 0, 0;
   model.col(1) << 2, 0, 0;
   model.col(2) << 0, 3, 0;
@@ -195,10 +190,10 @@ TEST(PointCloud, KnownScaleConvenience) {
   T_MD.translation() << 5, 3, 0;
 
   // create source/data point cloud
-  clipper::invariants::KnownScalePointCloud::Data data = T_MD.inverse() * model;
+  Eigen::Matrix3Xd data = T_MD.inverse() * model;
 
   // remove one point from the tgt (model) cloud---simulates a partial view
-  data.conservativeResize(3,3);
+  data.conservativeResize(3, 3);
 
   //
   // Identify data association
@@ -223,10 +218,10 @@ TEST(PointCloud, LargePointCloud) {
   //
 
   clipper::Params params;
-  clipper::invariants::KnownScalePointCloud::Params iparams;
+  clipper::invariants::EuclideanDistance::Params iparams;
   iparams.sigma = 0.015;
   iparams.epsilon = 0.02;
-  clipper::CLIPPER<clipper::invariants::KnownScalePointCloud> clipper(params, iparams);
+  clipper::CLIPPER<clipper::invariants::EuclideanDistance> clipper(params, iparams);
 
   //
   // Data setup
@@ -234,8 +229,7 @@ TEST(PointCloud, LargePointCloud) {
 
   // create a target/model point cloud of data
   static constexpr int N = 32;
-  clipper::invariants::KnownScalePointCloud::Data model;
-  model = 5*clipper::invariants::KnownScalePointCloud::Data::Random(3, N);
+  Eigen::Matrix3Xd model = 5*Eigen::MatrixXd::Random(3, N);
 
   // transform of data w.r.t model
   Eigen::Affine3d T_MD;
@@ -243,7 +237,7 @@ TEST(PointCloud, LargePointCloud) {
   T_MD.translation() << 5, 3, 0;
 
   // create source/data point cloud
-  clipper::invariants::KnownScalePointCloud::Data data = T_MD.inverse() * model;
+  Eigen::Matrix3Xd data = T_MD.inverse() * model;
 
 
   //

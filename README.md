@@ -118,4 +118,4 @@ Then, you can link your project with `clipper` using the syntax `target_link_lib
 
 ---
 
-(c) MIT, Ford Motor Company, 2020-2021
+This research is supported by Ford Motor Company.

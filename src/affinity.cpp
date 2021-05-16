@@ -1,19 +1,22 @@
 /**
- * @file planecloud.cpp
- * @brief Scores geometric invariants of a set of planes
+ * @file affinity.h
+ * @brief Create an affinity matrix by scoring association consistency
  * @author Parker Lusk <plusk@mit.edu>
- * @date 3 October 2020
- * @copyright Copyright MIT, Ford Motor Company (c) 2020-2021
+ * @date 15 May 2021
  */
 
-#include <iostream>
-
-#include "clipper/utils.h"
-#include "clipper/invariants/planecloud.h"
+#include "clipper/affinity.h"
 
 namespace clipper {
-namespace invariants {
 
+/**
+ * @brief      Maps a flat index to coordinate of a square symmetric matrix
+ *
+ * @param[in]  k     The flat index to find the corresponding r,c of
+ * @param[in]  n     Dimension of the square, symmetric matrix
+ *
+ * @return     row, col of a matrix corresponding to flat index k
+ */
 static std::tuple<size_t,size_t> k2ij(size_t k, size_t n)
 {
   k += 1;
@@ -28,9 +31,11 @@ static std::tuple<size_t,size_t> k2ij(size_t k, size_t n)
 
 // ----------------------------------------------------------------------------
 
-PairMC PlaneCloud::createAffinityMatrix(const Data& D1, const Data& D2, Association& A)
+PairMC scorePairwiseConsistency(invariants::PairwiseInvariant& invariant,
+                      const invariants::Data& D1, const invariants::Data& D2,
+                      Association& A)
 {
-  if (A.size() == 0) A = utils::createAllToAll(D1.cols(), D2.cols());
+  if (A.size() == 0) A = createAllToAll(D1.cols(), D2.cols());
 
   const size_t m = A.rows();
 
@@ -58,7 +63,7 @@ PairMC PlaneCloud::createAffinityMatrix(const Data& D1, const Data& D2, Associat
     const auto& d2i = D2.col(A(i,1));
     const auto& d2j = D2.col(A(j,1));
 
-    const double scr = scoreInvariantConsistency(d1i, d1j, d2i, d2j);
+    const double scr = invariant(d1i, d1j, d2i, d2j);
     if (scr > 0) M(i,j) = M(j,i) = scr;
     else C(i,j) = C(j,i) = 0; // inconsistency constraint
   }
@@ -69,20 +74,4 @@ PairMC PlaneCloud::createAffinityMatrix(const Data& D1, const Data& D2, Associat
   return {M, C};
 }
 
-// ----------------------------------------------------------------------------
-
-double PlaneCloud::scoreInvariantConsistency(
-  const Datum& d1i, const Datum& d1j, const Datum& d2i, const Datum& d2j)
-{
-
-  // assumption: normals are unit length
-  const double alpha1 = d1i.head<3>().transpose() * d1j.head<3>();
-  const double alpha2 = d2i.head<3>().transpose() * d2j.head<3>();
-
-  const double c = std::abs(alpha1 - alpha2);
-
-  return (c<params_.epsilon) ? std::exp(-0.5*c*c/(params_.sigma*params_.sigma)) : 0;
-}
-
-} // ns invariants
 } // ns clipper
