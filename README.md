@@ -40,8 +40,11 @@ Once successful, the C++ tests can be run with `./test/tests` (if `-DBUILD_TESTS
 If Python bindings are built (see configuration options below), then the `clipper` Python module will need to be installed before using. This can be done with
 
 ```bash
-$ cd build/bindings/python
-$ python3 -m pip install . # 'python3 -m' ensures appropriate pip version is used
+$ cd build
+$ make pip-install
+
+# or directly using pip (e.g., to control which python version)
+$ python3 -m pip install build/bindings/python # 'python3 -m' ensures appropriate pip version is used
 ```
 
 ***Note**: if using Python2 (e.g., < ROS Noetic), you must tell pybind11 to use Python2.7. Do this with adding the flag `-DPYBIND11_PYTHON_VERSION=2.7` to the `cmake ..` command. You may have to remove your `build` directory and start over to ensure nothing is cached. You should see that pybind11 finds a Python2.7 interpreter and libraries.*
@@ -63,7 +66,7 @@ The following `cmake` options are available when building CLIPPER:
 | Option                  | Description                                                                                                                                                                     | Default |
 |-------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
 | `BUILD_BINDINGS_PYTHON` | Uses [`pybind11`](https://github.com/pybind/pybind11) to create Python bindings for CLIPPER                                                                                     | `ON`    |
-| `BUILD_BINDINGS_MATLAB` | Attempts to build MEX files which are required for the MATLAB examples. A MATLAB installation is required.                                                                      | `ON`    |
+| `BUILD_BINDINGS_MATLAB` | Attempts to build MEX files which are required for the MATLAB examples. A MATLAB installation is required. Gracefully fails if not found.                                     | `ON`    |
 | `BUILD_TESTS`           | Builds C++ tests                                                                                                                                                                | `OFF`    |
 | `ENABLE_MKL`            | Attempts to use [Intel MKL](https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl.html) (if installed) with Eigen for accelerated linear algebra. | `OFF`   |
 | `ENABLE_BLAS`           | Attempts to use a BLAS with Eigen for accelerated linear algebra.                                                                                                               | `OFF`   |
