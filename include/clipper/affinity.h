@@ -8,7 +8,6 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 
 #include <Eigen/Dense>
 
@@ -21,6 +20,13 @@ namespace clipper {
 
   PairMC scorePairwiseConsistency(invariants::PairwiseInvariant& invariant,
                         const invariants::Data& D1, const invariants::Data& D2,
-                        Association& A);
+                        Association& A, bool parallelize = true);
+
+  PairMC scorePairwiseConsistency(const invariants::PairwiseInvariantPtr& invariant,
+                        const invariants::Data& D1, const invariants::Data& D2,
+                        Association& A, bool parallelize = true)
+  {
+    return scorePairwiseConsistency(*invariant, D1, D2, A, parallelize);
+  }
 
 } // ns clipper

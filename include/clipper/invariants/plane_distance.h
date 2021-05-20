@@ -28,7 +28,7 @@ namespace invariants {
     double operator()(const Datum& ai, const Datum& aj, const Datum& bi, const Datum& bj) override;
 
   private:
-    Params params_;    
+    Params params_;
   };
 
 } // ns invariants

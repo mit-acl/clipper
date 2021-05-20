@@ -32,6 +32,7 @@ namespace invariants {
     virtual double operator()(const Datum& ai, const Datum& aj, const Datum& bi, const Datum& bj) = 0;
   };
 
+  using PairwiseInvariantPtr = std::shared_ptr<PairwiseInvariant>;
   using PairwiseInvariantConstPtr = std::shared_ptr<const PairwiseInvariant>;
 
 } // ns invariants

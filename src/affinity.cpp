@@ -33,7 +33,7 @@ static std::tuple<size_t,size_t> k2ij(size_t k, size_t n)
 
 PairMC scorePairwiseConsistency(invariants::PairwiseInvariant& invariant,
                       const invariants::Data& D1, const invariants::Data& D2,
-                      Association& A)
+                      Association& A, bool parallelize)
 {
   if (A.size() == 0) A = createAllToAll(D1.cols(), D2.cols());
 
@@ -42,7 +42,7 @@ PairMC scorePairwiseConsistency(invariants::PairwiseInvariant& invariant,
   Eigen::MatrixXd M = Eigen::MatrixXd::Zero(m,m);
   Eigen::MatrixXd C = Eigen::MatrixXd::Ones(m,m);
 
-#pragma omp parallel for shared(A, D1, D2, M, C)
+#pragma omp parallel for shared(A, D1, D2, M, C) if(parallelize)
   for (size_t k=0; k<m*(m-1)/2; ++k) {
     size_t i, j; std::tie(i, j) = k2ij(k, m);
 

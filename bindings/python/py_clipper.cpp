@@ -18,6 +18,8 @@
 #include "clipper/utils.h"
 #include "clipper/invariants/builtins.h"
 
+#include "trampolines.h"
+
 namespace py = pybind11;
 using namespace pybind11::literals;
 
@@ -29,17 +31,15 @@ void pybind_invariants(py::module& m)
 
   using namespace clipper::invariants;
 
-  m.def("create_all_to_all", clipper::createAllToAll,
-    "n1"_a, "n2"_a,
-    "Create an all-to-all hypothesis for association. Useful for the case of"
-    " no prior information or putative associations.");
-
   //
   // Base Invariants
   //
 
-  py::class_<Invariant>(m, "Invariant");
-  py::class_<PairwiseInvariant, Invariant>(m, "PairwiseInvariant");
+  py::class_<Invariant, PyInvariant<>, std::shared_ptr<Invariant>>(m, "Invariant")
+    .def(py::init<>());
+  py::class_<PairwiseInvariant, Invariant, PyPairwiseInvariant<>, std::shared_ptr<PairwiseInvariant>>(m, "PairwiseInvariant")
+    .def(py::init<>())
+    .def("__call__", &clipper::invariants::PairwiseInvariant::operator());
 
   //
   // Euclidean Distance
@@ -56,7 +56,7 @@ void pybind_invariants(py::module& m)
     .def_readwrite("sigma", &clipper::invariants::EuclideanDistance::Params::sigma)
     .def_readwrite("epsilon", &clipper::invariants::EuclideanDistance::Params::epsilon);
 
-  py::class_<EuclideanDistance, PairwiseInvariant>(m, "EuclideanDistance")
+  py::class_<EuclideanDistance, PairwiseInvariant, PyPairwiseInvariant<EuclideanDistance>, std::shared_ptr<EuclideanDistance>>(m, "EuclideanDistance")
     .def(py::init<const EuclideanDistance::Params&>());
 
   //
@@ -74,7 +74,7 @@ void pybind_invariants(py::module& m)
     .def_readwrite("sigma", &clipper::invariants::PlaneDistance::Params::sigma)
     .def_readwrite("epsilon", &clipper::invariants::PlaneDistance::Params::epsilon);
 
-  py::class_<PlaneDistance, PairwiseInvariant>(m, "PlaneDistance")
+  py::class_<PlaneDistance, PairwiseInvariant, PyPairwiseInvariant<PlaneDistance>, std::shared_ptr<PlaneDistance>>(m, "PlaneDistance")
     .def(py::init<const PlaneDistance::Params&>());
 }
 
@@ -115,7 +115,24 @@ PYBIND11_MODULE(clipper, m)
     .def_readwrite("u", &clipper::Solution::u)
     .def_readwrite("score", &clipper::Solution::score);
 
-  m.def("score_pairwise_consistency", clipper::scorePairwiseConsistency,
+  m.def("create_all_to_all", clipper::createAllToAll,
+    "n1"_a, "n2"_a,
+    "Create an all-to-all hypothesis for association. Useful for the case of"
+    " no prior information or putative associations.");
+
+  m.def("score_pairwise_consistency", [](const clipper::invariants::PairwiseInvariantPtr& invariant,
+                        const clipper::invariants::Data& D1, const clipper::invariants::Data& D2,
+                        clipper::Association& A) {
+
+    // indicates if calls to invariant can be made in parallel. This is primarily to
+    // prevent GIL-related resource deadlocking for derived classes in Python. See also
+    // https://github.com/pybind/pybind11/issues/813
+    // Python extended c++ classes will inherit from PyPairwiseInvariant
+    bool parallelize = (std::dynamic_pointer_cast<PyPairwiseInvariant<>>(invariant)) ? false : true;
+    auto ret = clipper::scorePairwiseConsistency(invariant, D1, D2, A, parallelize);
+    return ret;
+
+  }, py::call_guard<py::gil_scoped_release>(),
     "invariant"_a, "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a,
     "Scores consistency between pairs of associations in A");
 
