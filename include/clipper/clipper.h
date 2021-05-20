@@ -12,6 +12,7 @@
 #include <Eigen/Dense>
 
 #include "clipper/invariants/abstract.h"
+#include "clipper/invariants/builtins.h"
 #include "clipper/affinity.h"
 #include "clipper/find_dense_cluster.h"
 

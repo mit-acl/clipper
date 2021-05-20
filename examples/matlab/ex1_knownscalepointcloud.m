@@ -6,12 +6,10 @@
 % 
 % For more details, please see the article
 %   P.C. Lusk, K. Fathian, J.P. How, "CLIPPER: A Graph-Theoretic Framework
-%       "for Robust Data Association," 2020
-%
-% Copyright MIT, Ford Motor Company (c) 2020-2021
+%       "for Robust Data Association," ICRA 2021
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear, clc;
-addpath(genpath('build/bindings/matlab')) % for building invariants
+addpath(genpath('build/bindings/matlab')) % for scoring invariants
 addpath(genpath('matlab')) % for clipper algorithm
 %% Generate model/target point cloud
 
@@ -52,7 +50,7 @@ params = struct;
 params.sigma = 0.01;
 params.epsilon = 0.06;
 
-[M, C, A] = clipper_knownscalepointcloud(D1, D2, A, params);
+[M, C, A] = clipper_euclideandistance(D1, D2, A, params);
 
 [u, idx, ~] = clipper(M, C);
 Ain = A(idx,:);

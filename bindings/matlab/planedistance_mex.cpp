@@ -1,12 +1,12 @@
 /**
- * @file knownscalepointcloud_mex.cpp
- * @brief MATLAB/MEX for scoring invariants for known scale point cloud reg
+ * @file planedistance_mex.cpp
+ * @brief MATLAB/MEX for scoring the plane pair invariant
  * @author Parker Lusk <plusk@mit.edu>
  * @date 5 October 2020
- * @copyright Copyright MIT, Ford Motor Company (c) 2020-2021
  */
 
 #include <iostream>
+
 #include <algorithm>
 #include <cctype>
 #include <functional>
@@ -17,7 +17,7 @@
 
 #include <Eigen/Dense>
 
-#include <clipper/invariants/builtins.h>
+#include <clipper/clipper.h>
 
 #include "mexutils.h"
 
@@ -29,8 +29,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   // prhs   array poplulated by inputs (data passed from matlab)
 
   clipper::Association A;
-  clipper::invariants::KnownScalePointCloud::Data D1, D2;
-  clipper::invariants::KnownScalePointCloud::Params params;
+  clipper::invariants::Data D1, D2;
 
   const mxArray * pStruct = nullptr;
 
@@ -45,37 +44,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
 
   if (nrhs > 4) {
-    mexErrMsgIdAndTxt("knownscalepointcloud:nargin", "Only 3 or 4 input args supported (D1, D2, A, params)");
+    mexErrMsgIdAndTxt("planedistance:nargin", "Only 3 or 4 input args supported (D1, D2, A, params)");
   }
 
   // shift indexing from MATLAB to C++
   if (A.size()) A -= clipper::Association::Ones(A.rows(), A.cols());
 
-  std::map<std::string, std::function<void(clipper::invariants::KnownScalePointCloud::Params&,const void*)>> map;
-  map = {
-    {"sigma", [](auto& p, const void* v){ p.sigma = *(double*)v; }},
-    {"epsilon", [](auto& p, const void* v){ p.epsilon = *(double*)v; }},
-  };
+  // extract parameters from optionally provided parameters
+  ParamsMap<clipper::invariants::PlaneDistance::Params> map;
+  map.add_field<double>("sigma", &clipper::invariants::PlaneDistance::Params::sigma);
+  map.add_field<double>("epsilon", &clipper::invariants::PlaneDistance::Params::epsilon);
+  clipper::invariants::PlaneDistance::Params params = map.extract(pStruct);
 
-  if (pStruct) {
-    const int nfields = mxGetNumberOfFields(pStruct);
-
-    for (size_t i=0; i<nfields; ++i) {
-      std::string field{mxGetFieldNameByNumber(pStruct, i)};
-
-      std::transform(field.begin(), field.end(), field.begin(),
-        [](unsigned char c){ return std::tolower(c); });
-
-      const double * value = mxGetPr(mxGetFieldByNumber(pStruct, 0, i));
-
-      auto it = map.find(field);
-      if (it != map.end()) it->second(params, value);
-    }
-  }
-
-  clipper::invariants::KnownScalePointCloud invariant(params);
+  clipper::invariants::PlaneDistance invariant(params);
   Eigen::MatrixXd M, C;
-  std::tie(M, C) = invariant.createAffinityMatrix(D1, D2, A);
+  std::tie(M, C) = clipper::scorePairwiseConsistency(invariant, D1, D2, A);
 
   if (nlhs >= 1) {
     plhs[0] = mxCreateDoubleMatrix(M.rows(), M.cols(), mxREAL);
@@ -94,6 +77,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
 
   if (nlhs > 3) {
-    mexErrMsgIdAndTxt("knownscalepointcloud:nargout", "Only 1, 2, or 3 output args supported (M, C, A)");
+    mexErrMsgIdAndTxt("planedistance:nargout", "Only 1, 2, or 3 output args supported (M, C, A)");
   }
 }

@@ -8,12 +8,10 @@
 %
 % For more details, please see the article
 %   P.C. Lusk, K. Fathian, J.P. How, "CLIPPER: A Graph-Theoretic Framework
-%       "for Robust Data Association," 2020
-%
-% Copyright MIT, Ford Motor Company (c) 2020-2021
+%       "for Robust Data Association," ICRA 2021
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear, clc;
-addpath(genpath('build/bindings/matlab')) % for building invariants
+addpath(genpath('build/bindings/matlab')) % for scoring invariants
 addpath(genpath('matlab')) % for clipper algorithm
 %% Plane parameters segmented from two LiDAR scans
 
@@ -81,7 +79,7 @@ A = [];
 params = struct;
 params.sigma = deg2rad(1.5);
 params.epsilon = 1;
-[M, C, A] = clipper_planecloud(D1, D2, A, params);
+[M, C, A] = clipper_planedistance(D1, D2, A, params);
 
 [u, idx, ~] = clipper(M, C);
 Ain = A(idx,:);
