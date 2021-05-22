@@ -18,9 +18,14 @@ double EuclideanDistance::operator()(const Datum& ai, const Datum& aj,
   const double l1 = (ai - aj).norm();
   const double l2 = (bi - bj).norm();
 
-  // normalized consistency score
-  const double mean = (l1 + l2) / 2.0;
-  const double c = std::abs(l1 - l2);// / mean;
+  // enforce minimum distance criterion -- if points in the same dataset
+  // are too close, then this pair of associations cannot be selected
+  if (params_.mindist > 0 && (l1 < params_.mindist || l2 < params_.mindist)) {
+    return 0.0;
+  }
+
+  // consistency score
+  const double c = std::abs(l1 - l2);
 
   return (c<params_.epsilon) ? std::exp(-0.5*c*c/(params_.sigma*params_.sigma)) : 0;
 }

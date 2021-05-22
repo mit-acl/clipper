@@ -23,6 +23,7 @@ namespace invariants {
     {
       double sigma = 0.01; ///< spread / "variance" of exponential kernel
       double epsilon = 0.06; ///< bound on consistency score, determines if inlier/outlier
+      double mindist = 0; ///< minimum allowable distance between inlier points in the same dataset
     };
   public:
     EuclideanDistance(const Params& params)

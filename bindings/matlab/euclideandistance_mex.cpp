@@ -53,6 +53,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   ParamsMap<clipper::invariants::EuclideanDistance::Params> map;
   map.add_field<double>("sigma", &clipper::invariants::EuclideanDistance::Params::sigma);
   map.add_field<double>("epsilon", &clipper::invariants::EuclideanDistance::Params::epsilon);
+  map.add_field<double>("mindist", &clipper::invariants::EuclideanDistance::Params::mindist);
   clipper::invariants::EuclideanDistance::Params params = map.extract(pStruct);
 
   clipper::invariants::EuclideanDistance invariant(params);
