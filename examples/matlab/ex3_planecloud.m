@@ -77,12 +77,16 @@ A = [];
 
 %% Run CLIPPER
 params = struct;
-params.sigma = deg2rad(1.5);
-params.epsilon = 1;
-[M, C, A] = clipper_planedistance(D1, D2, A, params);
+params.sign = deg2rad(1.5);
+params.epsn = 1;
+
+% massage data into correct format
+DD1 = [zeros(3,size(D1,2)); D1(1:3,:)];
+DD2 = [zeros(3,size(D2,2)); D2(1:3,:)];
+[M, C, A] = clipper_pointnormaldistance(DD1, DD2, A, params);
 
 [u, idx, ~] = clipper(M, C);
-Ain = A(idx,:);
+Ain = A(idx,:)
 
 %% check returned correspondences
 [~,idxAgt] = sort(Agt(:,1));

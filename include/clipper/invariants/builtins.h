@@ -8,4 +8,4 @@
 #pragma once
 
 #include "clipper/invariants/euclidean_distance.h"
-#include "clipper/invariants/plane_distance.h"
+#include "clipper/invariants/pointnormal_distance.h"

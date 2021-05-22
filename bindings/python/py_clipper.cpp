@@ -60,22 +60,25 @@ void pybind_invariants(py::module& m)
     .def(py::init<const EuclideanDistance::Params&>());
 
   //
-  // Plane Distance
+  // Point-Normal Distance
   //
 
-  py::class_<PlaneDistance::Params>(m, "PlaneDistanceParams")
+  py::class_<PointNormalDistance::Params>(m, "PointNormalDistanceParams")
     .def(py::init<>())
-    .def("__repr__", [](const PlaneDistance::Params &params) {
+    .def("__repr__", [](const PointNormalDistance::Params &params) {
        std::ostringstream repr;
-       repr << "<PlaneDistanceParams : sigma=" << params.sigma;
-       repr << " epsilon=" << params.epsilon << ">";
+       repr << "<PointNormalDistanceParams : sigp=" << params.sigp;
+       repr << " epsp=" << params.epsp << " sign=" << params.sign;
+       repr << " epsn=" << params.epsn << ">";
        return repr.str();
     })
-    .def_readwrite("sigma", &clipper::invariants::PlaneDistance::Params::sigma)
-    .def_readwrite("epsilon", &clipper::invariants::PlaneDistance::Params::epsilon);
+    .def_readwrite("sigp", &clipper::invariants::PointNormalDistance::Params::sigp)
+    .def_readwrite("epsp", &clipper::invariants::PointNormalDistance::Params::epsp)
+    .def_readwrite("sign", &clipper::invariants::PointNormalDistance::Params::sign)
+    .def_readwrite("epsn", &clipper::invariants::PointNormalDistance::Params::epsn);
 
-  py::class_<PlaneDistance, PairwiseInvariant, PyPairwiseInvariant<PlaneDistance>, std::shared_ptr<PlaneDistance>>(m, "PlaneDistance")
-    .def(py::init<const PlaneDistance::Params&>());
+  py::class_<PointNormalDistance, PairwiseInvariant, PyPairwiseInvariant<PointNormalDistance>, std::shared_ptr<PointNormalDistance>>(m, "PointNormalDistance")
+    .def(py::init<const PointNormalDistance::Params&>());
 }
 
 PYBIND11_MODULE(clipper, m)

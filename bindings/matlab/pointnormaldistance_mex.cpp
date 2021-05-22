@@ -1,6 +1,6 @@
 /**
- * @file planedistance_mex.cpp
- * @brief MATLAB/MEX for scoring the plane pair invariant
+ * @file pointnormaldistance_mex.cpp
+ * @brief MATLAB/MEX for scoring the point-normal pair invariant
  * @author Parker Lusk <plusk@mit.edu>
  * @date 5 October 2020
  */
@@ -44,19 +44,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
 
   if (nrhs > 4) {
-    mexErrMsgIdAndTxt("planedistance:nargin", "Only 3 or 4 input args supported (D1, D2, A, params)");
+    mexErrMsgIdAndTxt("pointnormal:nargin", "Only 3 or 4 input args supported (D1, D2, A, params)");
   }
 
   // shift indexing from MATLAB to C++
   if (A.size()) A -= clipper::Association::Ones(A.rows(), A.cols());
 
   // extract parameters from optionally provided parameters
-  ParamsMap<clipper::invariants::PlaneDistance::Params> map;
-  map.add_field<double>("sigma", &clipper::invariants::PlaneDistance::Params::sigma);
-  map.add_field<double>("epsilon", &clipper::invariants::PlaneDistance::Params::epsilon);
-  clipper::invariants::PlaneDistance::Params params = map.extract(pStruct);
+  ParamsMap<clipper::invariants::PointNormalDistance::Params> map;
+  map.add_field<double>("sigp", &clipper::invariants::PointNormalDistance::Params::sigp);
+  map.add_field<double>("epsp", &clipper::invariants::PointNormalDistance::Params::epsp);
+  map.add_field<double>("sign", &clipper::invariants::PointNormalDistance::Params::sign);
+  map.add_field<double>("epsn", &clipper::invariants::PointNormalDistance::Params::epsn);
+  clipper::invariants::PointNormalDistance::Params params = map.extract(pStruct);
 
-  clipper::invariants::PlaneDistance invariant(params);
+  clipper::invariants::PointNormalDistance invariant(params);
   Eigen::MatrixXd M, C;
   std::tie(M, C) = clipper::scorePairwiseConsistency(invariant, D1, D2, A);
 
@@ -77,6 +79,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
 
   if (nlhs > 3) {
-    mexErrMsgIdAndTxt("planedistance:nargout", "Only 1, 2, or 3 output args supported (M, C, A)");
+    mexErrMsgIdAndTxt("pointnormal:nargout", "Only 1, 2, or 3 output args supported (M, C, A)");
   }
 }

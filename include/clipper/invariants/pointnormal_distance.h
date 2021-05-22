@@ -1,6 +1,6 @@
 /**
- * @file plane_distance.h
- * @brief Pairwise geometric invariant between planes
+ * @file pointnormal_distance.h
+ * @brief Pairwise geometric invariant between point-normals (e.g., planes)
  * @author Parker Lusk <plusk@mit.edu>
  * @date 15 May 2021
  */
@@ -14,20 +14,25 @@ namespace invariants {
 
   /**
    * @brief      Specialization of PairwiseInvariant to be applied to sets
-   *             of planes (equivalently, points with normals).
+   *             of planes, patches, or equivalently, points with normals.
+   *             
+   *             Data: 6xn matrix
+   *             Datum: 6x1 vector --> top 3x1 is point, bottom 3x1 is normal.
    */
-  class PlaneDistance : public PairwiseInvariant
+  class PointNormalDistance : public PairwiseInvariant
   {
   public:
     struct Params
     {
-      double sigma = 0.01; ///< spread / "variance" of exponential kernel
-      double epsilon = 0.06; ///< bound on consistency score, determines if inlier/outlier
+      double sigp = 0.5; ///< point - spread of exp kernel
+      double epsp = 0.5; ///< point - bound on consistency score
+      double sign = 0.10; ///< normal - spread of exp kernel
+      double epsn = 0.35; ///< normal - bound on consistency score
     };
   public:
-    PlaneDistance(const Params& params)
+    PointNormalDistance(const Params& params)
     : params_(params) {}
-    ~PlaneDistance() = default;
+    ~PointNormalDistance() = default;
 
     /**
      * @brief      Functor for pairwise invariant scoring function
