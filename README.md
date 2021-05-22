@@ -81,6 +81,8 @@ On Intel CPUs, MKL should be preferred as it offers superior performance over ot
 
 With MKL, we have found an almost 2x improvement in runtime over the MATLAB implementation. On an i9, the C++/MKL implementation can solve problems with 1000 associations in 70 ms.
 
+**Note:** Currently, MATLAB bindings do not work if either BLAS or MKL are enabled. Python bindings do not work if MKL is enabled.
+
 ### Including in Another C++ Project
 
 A simple way to include `clipper` as a shared library in another C++ project is via `cmake`. This method will automatically clone and build `clipper`, making the resulting library accessible in your main project. In the project `CMakeLists.txt` you can add
