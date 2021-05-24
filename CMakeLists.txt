@@ -66,17 +66,22 @@ endif()
 # Targets
 ###############################################################################
 
-add_library(clipper SHARED
+add_library(clipper SHARED)
+target_sources(clipper PRIVATE
   src/find_dense_cluster.cpp
+  src/affinity.cpp
   src/utils.cpp
-  src/invariants/known_scale_pointcloud.cpp
-  src/invariants/planecloud.cpp)
+  src/invariants/euclidean_distance.cpp
+  src/invariants/pointnormal_distance.cpp)
 target_link_libraries(clipper PUBLIC Eigen3::Eigen)
 target_link_libraries(clipper PRIVATE OpenMP::OpenMP_CXX)
 target_include_directories(clipper PUBLIC
     $<INSTALL_INTERFACE:include>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
 target_compile_options(clipper PUBLIC -march=native -mavx -mfma)
+set_target_properties(clipper PROPERTIES
+  VERSION ${PROJECT_VERSION})
+target_compile_definitions(clipper PUBLIC PROJECT_VERSION="${PROJECT_VERSION}")
 
 if(MKL_FOUND)
     target_include_directories(clipper PRIVATE ${MKL_INCLUDE_DIR})

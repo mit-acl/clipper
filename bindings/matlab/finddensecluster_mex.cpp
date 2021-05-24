@@ -3,7 +3,6 @@
  * @brief MATLAB/MEX binding for running CLIPPER's core findDenseCluster algo
  * @author Parker Lusk <plusk@mit.edu>
  * @date 5 October 2020
- * @copyright Copyright MIT, Ford Motor Company (c) 2020-2021
  */
 
 #include <algorithm>
@@ -16,8 +15,6 @@
 #include <Eigen/Dense>
 
 #include <clipper/clipper.h>
-#include <clipper/find_dense_cluster.h>
-#include <clipper/utils.h>
 
 #include "mexutils.h"
 

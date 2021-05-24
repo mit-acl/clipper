@@ -3,7 +3,6 @@
  * @brief MATLAB/MEX utils for CLIPPER bindings
  * @author Parker Lusk <plusk@mit.edu>
  * @date 5 October 2020
- * @copyright Copyright MIT, Ford Motor Company (c) 2020-2021
  */
 
 #pragma once
@@ -66,3 +65,52 @@ Eigen::Map<MatlabSparse> mexMatrixToEigenSparse(const mxArray* pa)
     MatlabSparse::StorageIndex* jc = reinterpret_cast<MatlabSparse::StorageIndex*>(mxGetJc(pa));
     return Eigen::Map<MatlabSparse>(m, n, nz, jc, ir, mxGetPr(pa));
 }
+
+// ----------------------------------------------------------------------------
+
+/**
+ * @brief      Helper class to map MATLAB struct to Invariant Params
+ *
+ * @tparam     Params  The type of Invariant Params being used
+ */
+template <typename Params>
+class ParamsMap
+{
+public:
+  ParamsMap() = default;
+  ~ParamsMap() = default;
+
+  template <typename T, typename M>
+  void add_field(const std::string& name, M m)
+  {
+    map_.emplace(name, [m](auto& p, const void* v) { p.*m = *static_cast<const T*>(v); });
+  }
+
+  Params extract(const mxArray * pStruct)
+  {
+    Params params;
+
+    if (pStruct) {
+      const int nfields = mxGetNumberOfFields(pStruct);
+
+      for (size_t i=0; i<nfields; ++i) {
+        std::string field{mxGetFieldNameByNumber(pStruct, i)};
+
+        std::transform(field.begin(), field.end(), field.begin(),
+          [](unsigned char c){ return std::tolower(c); });
+
+        // TODO: only works for numeric types?
+        const double * value = mxGetPr(mxGetFieldByNumber(pStruct, 0, i));
+
+        auto it = map_.find(field);
+        if (it != map_.end()) it->second(params, value);
+      }
+    }
+
+    return params;
+  }
+
+private:
+  using ParamSetHandler = std::function<void(Params&, const void*)>;
+  std::map<std::string, ParamSetHandler> map_;
+};

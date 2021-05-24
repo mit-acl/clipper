@@ -3,7 +3,6 @@
  * @brief CLIPPER dense cluster finding
  * @author Parker Lusk <plusk@mit.edu>
  * @date 3 October 2020
- * @copyright Copyright MIT, Ford Motor Company (c) 2020-2021
  */
 
 #pragma once

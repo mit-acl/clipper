@@ -3,7 +3,6 @@
  * @brief Python bindings for CLIPPER
  * @author Parker Lusk <plusk@mit.edu>
  * @date 28 January 2021
- * @copyright Copyright MIT, Ford Motor Company (c) 2020-2021
  */
 
 #include <cstdint>
@@ -17,8 +16,9 @@
 
 #include "clipper/clipper.h"
 #include "clipper/utils.h"
-#include "clipper/find_dense_cluster.h"
 #include "clipper/invariants/builtins.h"
+
+#include "trampolines.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -31,49 +31,62 @@ void pybind_invariants(py::module& m)
 
   using namespace clipper::invariants;
 
-  m.def("create_all_to_all", clipper::utils::createAllToAll,
-    "n1"_a, "n2"_a,
-    "Create an all-to-all hypothesis for association. Useful for the case of"
-    " no prior information or putative associations.");
-
   //
-  // Known Scale Point Cloud
+  // Base Invariants
   //
 
-  py::class_<KnownScalePointCloud::Params>(m, "KnownScalePointCloudParams")
+  py::class_<Invariant, PyInvariant<>, std::shared_ptr<Invariant>>(m, "Invariant")
+    .def(py::init<>());
+  py::class_<PairwiseInvariant, Invariant, PyPairwiseInvariant<>, std::shared_ptr<PairwiseInvariant>>(m, "PairwiseInvariant")
     .def(py::init<>())
-    .def("__repr__", [](const KnownScalePointCloud::Params &params) {
+    .def("__call__", &clipper::invariants::PairwiseInvariant::operator());
+
+  //
+  // Euclidean Distance
+  //
+
+  py::class_<EuclideanDistance::Params>(m, "EuclideanDistanceParams")
+    .def(py::init<>())
+    .def("__repr__", [](const EuclideanDistance::Params &params) {
        std::ostringstream repr;
-       repr << "<KnownScalePointCloudParams : sigma=" << params.sigma;
-       repr << " epsilon=" << params.epsilon << ">";
+       repr << "<EuclideanDistanceParams : sigma=" << params.sigma;
+       repr << " epsilon=" << params.epsilon;
+       repr << " mindist=" << params.mindist << ">";
        return repr.str();
     })
-    .def_readwrite("sigma", &clipper::invariants::KnownScalePointCloud::Params::sigma)
-    .def_readwrite("epsilon", &clipper::invariants::KnownScalePointCloud::Params::epsilon);
+    .def_readwrite("sigma", &clipper::invariants::EuclideanDistance::Params::sigma)
+    .def_readwrite("epsilon", &clipper::invariants::EuclideanDistance::Params::epsilon)
+    .def_readwrite("mindist", &clipper::invariants::EuclideanDistance::Params::mindist);
 
-  py::class_<KnownScalePointCloud>(m, "KnownScalePointCloud")
-    .def(py::init<const KnownScalePointCloud::Params&>())
-    .def("create_affinity_matrix", &KnownScalePointCloud::createAffinityMatrix,
-      "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a);
+  py::class_<EuclideanDistance, PairwiseInvariant, PyPairwiseInvariant<EuclideanDistance>, std::shared_ptr<EuclideanDistance>>(m, "EuclideanDistance")
+    .def(py::init<const EuclideanDistance::Params&>());
 
   //
-  // Plane Cloud
+  // Point-Normal Distance
   //
 
-  // since these params are actually the same abstract Invariant::Params,
-  // create an alias on the Python side.
-  m.attr("PlaneCloudParams") = m.attr("KnownScalePointCloudParams");
+  py::class_<PointNormalDistance::Params>(m, "PointNormalDistanceParams")
+    .def(py::init<>())
+    .def("__repr__", [](const PointNormalDistance::Params &params) {
+       std::ostringstream repr;
+       repr << "<PointNormalDistanceParams : sigp=" << params.sigp;
+       repr << " epsp=" << params.epsp << " sign=" << params.sign;
+       repr << " epsn=" << params.epsn << ">";
+       return repr.str();
+    })
+    .def_readwrite("sigp", &clipper::invariants::PointNormalDistance::Params::sigp)
+    .def_readwrite("epsp", &clipper::invariants::PointNormalDistance::Params::epsp)
+    .def_readwrite("sign", &clipper::invariants::PointNormalDistance::Params::sign)
+    .def_readwrite("epsn", &clipper::invariants::PointNormalDistance::Params::epsn);
 
-  py::class_<PlaneCloud>(m, "PlaneCloud")
-    .def(py::init<const PlaneCloud::Params&>())
-    .def("create_affinity_matrix", &PlaneCloud::createAffinityMatrix,
-      "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a);
+  py::class_<PointNormalDistance, PairwiseInvariant, PyPairwiseInvariant<PointNormalDistance>, std::shared_ptr<PointNormalDistance>>(m, "PointNormalDistance")
+    .def(py::init<const PointNormalDistance::Params&>());
 }
 
 PYBIND11_MODULE(clipper, m)
 {
   m.doc() = "CLIPPER is a graph-theoretic framework for robust data association";
-  m.attr("__version__") = "0.1";
+  m.attr("__version__") = PROJECT_VERSION;
 
   py::module m_invariants = m.def_submodule("invariants");
   pybind_invariants(m_invariants);
@@ -106,6 +119,27 @@ PYBIND11_MODULE(clipper, m)
     .def_readwrite("nodes", &clipper::Solution::nodes)
     .def_readwrite("u", &clipper::Solution::u)
     .def_readwrite("score", &clipper::Solution::score);
+
+  m.def("create_all_to_all", clipper::createAllToAll,
+    "n1"_a, "n2"_a,
+    "Create an all-to-all hypothesis for association. Useful for the case of"
+    " no prior information or putative associations.");
+
+  m.def("score_pairwise_consistency", [](const clipper::invariants::PairwiseInvariantPtr& invariant,
+                        const clipper::invariants::Data& D1, const clipper::invariants::Data& D2,
+                        clipper::Association& A) {
+
+    // indicates if calls to invariant can be made in parallel. This is primarily to
+    // prevent GIL-related resource deadlocking for derived classes in Python. See also
+    // https://github.com/pybind/pybind11/issues/813
+    // Python extended c++ classes will inherit from PyPairwiseInvariant
+    bool parallelize = (std::dynamic_pointer_cast<PyPairwiseInvariant<>>(invariant)) ? false : true;
+    auto ret = clipper::scorePairwiseConsistency(invariant, D1, D2, A, parallelize);
+    return ret;
+
+  }, py::call_guard<py::gil_scoped_release>(),
+    "invariant"_a, "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a,
+    "Scores consistency between pairs of associations in A");
 
   m.def("find_dense_cluster",
     py::overload_cast<const Eigen::MatrixXd&, const Eigen::MatrixXd&,

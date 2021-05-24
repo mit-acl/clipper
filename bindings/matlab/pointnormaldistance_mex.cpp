@@ -1,9 +1,8 @@
 /**
- * @file knownscalepointcloud_mex.cpp
- * @brief MATLAB/MEX for scoring invariants for known scale point cloud reg
+ * @file pointnormaldistance_mex.cpp
+ * @brief MATLAB/MEX for scoring the point-normal pair invariant
  * @author Parker Lusk <plusk@mit.edu>
  * @date 5 October 2020
- * @copyright Copyright MIT, Ford Motor Company (c) 2020-2021
  */
 
 #include <iostream>
@@ -18,7 +17,7 @@
 
 #include <Eigen/Dense>
 
-#include <clipper/invariants/builtins.h>
+#include <clipper/clipper.h>
 
 #include "mexutils.h"
 
@@ -30,8 +29,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   // prhs   array poplulated by inputs (data passed from matlab)
 
   clipper::Association A;
-  clipper::invariants::PlaneCloud::Data D1, D2;
-  clipper::invariants::PlaneCloud::Params params;
+  clipper::invariants::Data D1, D2;
 
   const mxArray * pStruct = nullptr;
 
@@ -46,37 +44,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
 
   if (nrhs > 4) {
-    mexErrMsgIdAndTxt("planecloud:nargin", "Only 3 or 4 input args supported (D1, D2, A, params)");
+    mexErrMsgIdAndTxt("pointnormal:nargin", "Only 3 or 4 input args supported (D1, D2, A, params)");
   }
 
   // shift indexing from MATLAB to C++
   if (A.size()) A -= clipper::Association::Ones(A.rows(), A.cols());
 
-  std::map<std::string, std::function<void(clipper::invariants::PlaneCloud::Params&,const void*)>> map;
-  map = {
-    {"sigma", [](auto& p, const void* v){ p.sigma = *(double*)v; }},
-    {"epsilon", [](auto& p, const void* v){ p.epsilon = *(double*)v; }},
-  };
+  // extract parameters from optionally provided parameters
+  ParamsMap<clipper::invariants::PointNormalDistance::Params> map;
+  map.add_field<double>("sigp", &clipper::invariants::PointNormalDistance::Params::sigp);
+  map.add_field<double>("epsp", &clipper::invariants::PointNormalDistance::Params::epsp);
+  map.add_field<double>("sign", &clipper::invariants::PointNormalDistance::Params::sign);
+  map.add_field<double>("epsn", &clipper::invariants::PointNormalDistance::Params::epsn);
+  clipper::invariants::PointNormalDistance::Params params = map.extract(pStruct);
 
-  if (pStruct) {
-    const int nfields = mxGetNumberOfFields(pStruct);
-
-    for (size_t i=0; i<nfields; ++i) {
-      std::string field{mxGetFieldNameByNumber(pStruct, i)};
-
-      std::transform(field.begin(), field.end(), field.begin(),
-        [](unsigned char c){ return std::tolower(c); });
-
-      const double * value = mxGetPr(mxGetFieldByNumber(pStruct, 0, i));
-
-      auto it = map.find(field);
-      if (it != map.end()) it->second(params, value);
-    }
-  }
-
-  clipper::invariants::PlaneCloud invariant(params);
+  clipper::invariants::PointNormalDistance invariant(params);
   Eigen::MatrixXd M, C;
-  std::tie(M, C) = invariant.createAffinityMatrix(D1, D2, A);
+  std::tie(M, C) = clipper::scorePairwiseConsistency(invariant, D1, D2, A);
 
   if (nlhs >= 1) {
     plhs[0] = mxCreateDoubleMatrix(M.rows(), M.cols(), mxREAL);
@@ -95,6 +79,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
 
   if (nlhs > 3) {
-    mexErrMsgIdAndTxt("planecloud:nargout", "Only 1, 2, or 3 output args supported (M, C, A)");
+    mexErrMsgIdAndTxt("pointnormal:nargout", "Only 1, 2, or 3 output args supported (M, C, A)");
   }
 }

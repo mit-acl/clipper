@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='clipper',
-    version='0.1',
+    version='${PROJECT_VERSION}',
     author='Parker Lusk',
     author_email='plusk@mit.edu',
     description='Robust data association framework',

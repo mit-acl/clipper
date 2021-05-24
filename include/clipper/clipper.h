@@ -3,7 +3,6 @@
  * @brief CLIPPER data association framework
  * @author Parker Lusk <plusk@mit.edu>
  * @date 3 October 2020
- * @copyright Copyright MIT, Ford Motor Company (c) 2020-2021
  */
 
 #pragma once
@@ -13,26 +12,11 @@
 #include <Eigen/Dense>
 
 #include "clipper/invariants/abstract.h"
+#include "clipper/invariants/builtins.h"
+#include "clipper/affinity.h"
 #include "clipper/find_dense_cluster.h"
 
 namespace clipper {
-
-  /**
-   * @brief      Convenience function to select inlier associations
-   *
-   * @param[in]  soln  The solution of the dense cluster
-   * @param[in]  A     The initial set of associations
-   *
-   * @return     The subset of associations deemed as inliers via solution
-   */
-  inline Association selectInlierAssociations(const Solution& soln, const Association& A)
-  {
-    Association Ainliers = Association::Zero(soln.nodes.size(), 2);
-    for (size_t i=0; i<soln.nodes.size(); ++i) {
-      Ainliers.row(i) = A.row(soln.nodes[i]);
-    }
-    return Ainliers;
-  }
 
   /**
    * @brief      Convenience class to use CLIPPER for data association.
@@ -47,11 +31,11 @@ namespace clipper {
     : params_(params), invariant_(iparams) {}
     ~CLIPPER() = default;
 
-    Association findCorrespondences(const typename Ti::Data& D1,
-      const typename Ti::Data& D2, Association A = Association())
+    Association findCorrespondences(const typename invariants::Data& D1,
+      const typename invariants::Data& D2, Association A = Association())
     {
       // Create consistency graph
-      std::tie(M_, C_) = invariant_.createAffinityMatrix(D1, D2, A);
+      std::tie(M_, C_) = scorePairwiseConsistency(invariant_, D1, D2, A);
 
       // Find a dense cluster of consistent links
       soln_ = findDenseCluster(M_, C_, params_);
