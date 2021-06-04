@@ -11,14 +11,14 @@ This repo provides both MATLAB and C++ implementations of the CLIPPER framework.
 
 If you find this code useful in your research, please cite our paper:
 
-- P.C. Lusk, K. Fathian, and J.P. How, "CLIPPER: A Graph-Theoretic Framework for Robust Data Association," arXiv preprint arXiv:2011.10202, 2020. ([**pdf**](https://arxiv.org/pdf/2011.10202.pdf))
+- P.C. Lusk, K. Fathian, and J.P. How, "CLIPPER: A Graph-Theoretic Framework for Robust Data Association," arXiv preprint arXiv:2011.10202, 2020. ([**pdf**](https://arxiv.org/pdf/2011.10202.pdf)) ([**presentation**](https://youtu.be/QYLHueMhShY))
 
 ```bibtex
-@article{lusk2020clipper,
+@inproceedings{lusk2020clipper,
   title={CLIPPER: A Graph-Theoretic Framework for Robust Data Association},
   author={Lusk, Parker C and Fathian, Kaveh and How, Jonathan P},
-  journal={arXiv preprint arXiv:2011.10202},
-  year={2020}
+  booktitle={IEEE International Conference on Robotics and Automation (ICRA)},
+  year={2021}
 }
 ```
 
