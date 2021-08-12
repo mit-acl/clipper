@@ -109,7 +109,7 @@ project(clipper-download NONE)
 include(ExternalProject)
 ExternalProject_Add(clipper
     GIT_REPOSITORY      "https://github.com/mit-acl/clipper"
-    GIT_TAG             master
+    GIT_TAG             main
     SOURCE_DIR          "${CMAKE_CURRENT_BINARY_DIR}/src"
     BINARY_DIR          "${CMAKE_CURRENT_BINARY_DIR}/build"
     CONFIGURE_COMMAND   ""
