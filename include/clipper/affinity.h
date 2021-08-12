@@ -36,9 +36,6 @@ namespace clipper {
 
   PairMC scorePairwiseConsistency(const invariants::PairwiseInvariantPtr& invariant,
                         const invariants::Data& D1, const invariants::Data& D2,
-                        Association& A, bool parallelize = true)
-  {
-    return scorePairwiseConsistency(*invariant, D1, D2, A, parallelize);
-  }
+                        Association& A, bool parallelize = true);
 
 } // ns clipper
