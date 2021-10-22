@@ -7,6 +7,8 @@
 
 #include "clipper/invariants/euclidean_distance.h"
 
+#include <boost/math/distributions/non_central_chi_squared.hpp>
+
 namespace clipper {
 namespace invariants {
 
@@ -22,6 +24,23 @@ double EuclideanDistance::operator()(const Datum& ai, const Datum& aj,
   // are too close, then this pair of associations cannot be selected
   if (params_.mindist > 0 && (l1 < params_.mindist || l2 < params_.mindist)) {
     return 0.0;
+  }
+
+  if (params_.use_ncx2) {
+    const double sigmay2 = 2 * params_.sigma * params_.sigma;
+
+    static constexpr int k = 3;
+    const double lambda = (l1 * l1) / sigmay2;
+    boost::math::non_central_chi_squared ncx2(k, lambda);
+
+    const double smax = boost::math::pdf(ncx2, lambda) / sigmay2;
+
+    const double x = (l2 * l2) / sigmay2;
+    double s = boost::math::pdf(ncx2, x) / sigmay2 / smax;
+
+    if (s>1) s = 1;
+
+    return (s > params_.epsilon) ? s : 0;
   }
 
   // consistency score

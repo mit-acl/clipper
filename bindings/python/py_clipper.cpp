@@ -51,12 +51,14 @@ void pybind_invariants(py::module& m)
        std::ostringstream repr;
        repr << "<EuclideanDistanceParams : sigma=" << params.sigma;
        repr << " epsilon=" << params.epsilon;
-       repr << " mindist=" << params.mindist << ">";
+       repr << " mindist=" << params.mindist;
+       repr << " use_ncx2=" << ((params.use_ncx2)?"T":"F") << ">";
        return repr.str();
     })
     .def_readwrite("sigma", &clipper::invariants::EuclideanDistance::Params::sigma)
     .def_readwrite("epsilon", &clipper::invariants::EuclideanDistance::Params::epsilon)
-    .def_readwrite("mindist", &clipper::invariants::EuclideanDistance::Params::mindist);
+    .def_readwrite("mindist", &clipper::invariants::EuclideanDistance::Params::mindist)
+    .def_readwrite("use_ncx2", &clipper::invariants::EuclideanDistance::Params::use_ncx2);
 
   py::class_<EuclideanDistance, PairwiseInvariant, PyPairwiseInvariant<EuclideanDistance>, std::shared_ptr<EuclideanDistance>>(m, "EuclideanDistance")
     .def(py::init<const EuclideanDistance::Params&>());

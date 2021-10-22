@@ -28,6 +28,8 @@ endif()
 # Dependencies
 ###############################################################################
 
+find_package(Boost REQUIRED)
+
 find_package(Eigen3 REQUIRED)
 message(STATUS "Eigen Version: ${EIGEN3_VERSION_STRING} ${EIGEN3_VERSION}")
 
@@ -73,7 +75,7 @@ target_sources(clipper PRIVATE
   src/utils.cpp
   src/invariants/euclidean_distance.cpp
   src/invariants/pointnormal_distance.cpp)
-target_link_libraries(clipper PUBLIC Eigen3::Eigen)
+target_link_libraries(clipper PUBLIC Boost::boost Eigen3::Eigen)
 target_link_libraries(clipper PRIVATE OpenMP::OpenMP_CXX)
 target_include_directories(clipper PUBLIC
     $<INSTALL_INTERFACE:include>
