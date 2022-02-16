@@ -26,6 +26,12 @@ double EuclideanDistance::operator()(const Datum& ai, const Datum& aj,
     return 0.0;
   }
 
+  // distance between points should be nearly the same
+  const double c = std::abs(l1 - l2);
+
+  // if not, then bail
+  if (c > params_.epsilon) return 0;
+
   if (params_.use_ncx2) {
     const double sigmay2 = 2 * params_.sigma * params_.sigma;
 
@@ -40,13 +46,11 @@ double EuclideanDistance::operator()(const Datum& ai, const Datum& aj,
 
     if (s>1) s = 1;
 
-    return (s > params_.epsilon) ? s : 0;
+    return s;
   }
 
   // consistency score
-  const double c = std::abs(l1 - l2);
-
-  return (c<params_.epsilon) ? std::exp(-0.5*c*c/(params_.sigma*params_.sigma)) : 0;
+  return std::exp(-0.5*c*c/(params_.sigma*params_.sigma));
 }
 
 } // ns invariants

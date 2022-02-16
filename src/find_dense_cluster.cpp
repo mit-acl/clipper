@@ -159,7 +159,7 @@ Solution findDenseCluster(const T& _M, const T& C,
       den = idxD.select(Cbu, 1);
       const double deltad = (num.array() / den.array()).abs().minCoeff();
 
-      d += deltad;
+      d += deltad;// * 8;
       homotopy(Md, M, Cb, d);
 
     } else {
