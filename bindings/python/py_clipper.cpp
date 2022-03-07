@@ -141,6 +141,31 @@ PYBIND11_MODULE(clipper, m)
     "invariant"_a, "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a,
     "Scores consistency between pairs of associations in A");
 
+  m.def(
+      "score_sparse_pairwise_consistency",
+      [](const clipper::invariants::PairwiseInvariantPtr &invariant,
+         const clipper::invariants::Data &D1,
+         const clipper::invariants::Data &D2, clipper::Association &A) {
+        // indicates if calls to invariant can be made in parallel. This is
+        // primarily to prevent GIL-related resource deadlocking for derived
+        // classes in Python. See also
+        // https://github.com/pybind/pybind11/issues/813
+        // Python extended c++ classes will inherit from PyPairwiseInvariant
+        bool parallelize =
+            (std::dynamic_pointer_cast<PyPairwiseInvariant<>>(invariant))
+                ? false
+                : true;
+        // hacky way
+        auto ret = clipper::scoreSparsePairwiseConsistency(*invariant, D1, D2,
+                                                           A, parallelize);
+        return ret;
+      },
+      py::call_guard<py::gil_scoped_release>(), "invariant"_a,
+      "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a,
+      "Scores sparse consistency between pairs of associations in A");
+
+
+
   m.def("find_dense_cluster",
     py::overload_cast<const Eigen::MatrixXd&, const Eigen::MatrixXd&,
           const clipper::Params&>(clipper::findDenseCluster<Eigen::MatrixXd>),
@@ -150,6 +175,14 @@ PYBIND11_MODULE(clipper, m)
     py::overload_cast<const Eigen::MatrixXd&, const Eigen::MatrixXd&, const Eigen::VectorXd&,
           const clipper::Params&>(clipper::findDenseCluster<Eigen::MatrixXd>),
     "M"_a.noconvert(), "C"_a.noconvert(), "u0"_a, "params"_a);
+
+
+    m.def("find_dense_cluster_of_sparse_graph",
+        py::overload_cast<const Eigen::SparseMatrix<double> &,
+                          const Eigen::SparseMatrix<double> &,
+                          const clipper::Params &>(
+            clipper::findDenseClusterOfSparseGraph),
+        "M"_a.noconvert(), "C"_a.noconvert(), "params"_a);
 
   m.def("select_inlier_associations", &clipper::selectInlierAssociations,
     "soln"_a, "A"_a);
