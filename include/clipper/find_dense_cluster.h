@@ -11,10 +11,13 @@
 #include <vector>
 
 #include <Eigen/Core>
+#include <Eigen/Sparse>
 
 #include "clipper/utils.h"
 
 namespace clipper {
+
+  using SpMat = Eigen::SparseMatrix<double>;
 
   /**
    * @brief      CLIPPER parameters
@@ -29,7 +32,7 @@ namespace clipper {
     int maxoliters = 1000; ///< max num of outer loop iterations to find d
 
     // \brief Line search parameters
-    double beta = 0.25; ///< backtracking step size reduction, in (0, 1)
+    double beta = 0.1; ///< backtracking step size reduction, in (0, 1)
     int maxlsiters = 99; ///< maximum number of line search iters per grad step
 
     double eps = 1e-9; ///< numerical threshold around 0
@@ -98,5 +101,42 @@ namespace clipper {
   Solution findDenseCluster(const T& M,
     const T& C, const Eigen::VectorXd& u0,
     const Params& params = Params());
+
+
+  /**
+  * @brief      Identifies a dense cluster of an undirected graph G.
+  *             This is an optimized version of `findDenseCluster`
+  *             that exploits the sparsity pattern of G
+  *             and should be used with M and C matrices coming from
+  *             the `scoreSparsePairwiseConsistency`.
+  *
+  *
+  * @param[in]  M       Sparse Weighted affinity matrix (zeros along the diagonal)
+  * @param[in]  C       Sparse Binary constraint matrix (zeros along the diagonal)
+  * @param[in]  u0      Initial value of the optimization variable.
+  * @param[in]  params  Parameters of the algorithm run
+  *
+  *
+  * @return     Solutions structure containing dense cluster
+  */
+  Solution findDenseClusterOfSparseGraph(const SpMat &M, const SpMat &C,
+                                        const Eigen::VectorXd &u0,
+                                        const Params &params);
+
+  /**
+  * @brief      Encapsulates `findDenseClusterOfSparseGraph`
+  *             and passes its arguments along with the
+  *             the intial value of the optimization variable u0
+  *
+  *
+  * @param[in]  M       Sparse Weighted affinity matrix (zeros along the diagonal)
+  * @param[in]  C       Sparse Binary constraint matrix (zeros along the diagonal)
+  * @param[in]  params  Parameters of the algorithm run
+  *
+  *
+  * @return     Solutions structure containing dense cluster
+  */
+  Solution findDenseClusterOfSparseGraph(const SpMat &M, const SpMat &C,
+                                        const Params &params);
 
 } // ns clipper
