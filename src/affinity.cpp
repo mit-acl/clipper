@@ -83,4 +83,60 @@ PairMC scorePairwiseConsistency(const invariants::PairwiseInvariantPtr& invarian
   return scorePairwiseConsistency(*invariant, D1, D2, A, parallelize);
 }
 
+// ----------------------------------------------------------------------------
+
+SPairMC scoreSparsePairwiseConsistency(
+    invariants::PairwiseInvariant &invariant, const invariants::Data &D1,
+    const invariants::Data &D2, Association &A,
+    bool parallelize) { // if there are no associations, put them all together
+
+  // dense then sparsify (this is the same as the dense version)
+  // after a couple of different implementation, this is the most stable/fast method
+
+  if (A.size() == 0)
+    A = createAllToAll(D1.cols(), D2.cols());
+
+  const size_t m = A.rows();
+
+  Eigen::MatrixXd M = Eigen::MatrixXd::Zero(m, m);
+
+#pragma omp parallel for shared(A, D1, D2, M) if (parallelize)
+  for (size_t k = 0; k < m * (m - 1) / 2; ++k) {
+    size_t i, j;
+    std::tie(i, j) = k2ij(k, m);
+
+    if (A(i, 0) == A(j, 0) || A(i, 1) == A(j, 1)) {
+      continue;
+    }
+
+    //
+    // Evaluate the consistency of geometric invariants associated with ei, ej
+    //
+
+    // points to extract invariant from in D1
+    const auto &d1i = D1.col(A(i, 0));
+    const auto &d1j = D1.col(A(j, 0));
+
+    // points to extract invariant from in D2
+    const auto &d2i = D2.col(A(i, 1));
+    const auto &d2j = D2.col(A(j, 1));
+
+    const double scr = invariant(d1i, d1j, d2i, d2j);
+    if (scr > 0)
+      M(i, j) = M(j, i) = scr;
+  }
+
+  Eigen::SparseMatrix<double> sM = M.sparseView();
+  Eigen::SparseMatrix<double> sC = sM;
+
+  // One way to set sC contents to 1 instead of the line below.
+  // for (int k = 0; k < sC.outerSize(); ++k)
+  //   for (Eigen::SparseMatrix<double>::InnerIterator it(sC, k); it; ++it) {
+  //     it.valueRef() = 1.;
+  //   }
+  sC.coeffs() = 1.;
+
+  return {sM, sC};
+}
+
 } // ns clipper
