@@ -253,3 +253,54 @@ TEST(PointCloud, LargePointCloud) {
   }
 
 }
+
+
+TEST(PointCloud, LargePointCloudSparseClipper) {
+
+  //
+  // Algorithm setup
+  //
+
+  clipper::Params params;
+  clipper::invariants::EuclideanDistance::Params iparams;
+  iparams.sigma = 0.015;
+  iparams.epsilon = 0.02;
+  clipper::invariants::EuclideanDistance invariant(iparams);
+  //clipper::CLIPPER<clipper::invariants::EuclideanDistance> clipper(params, iparams);
+
+  //
+  // Data setup
+  //
+
+  // create a target/model point cloud of data
+  static constexpr int N = 32;
+  Eigen::Matrix3Xd model = 5*Eigen::MatrixXd::Random(3, N);
+
+  // transform of data w.r.t model
+  Eigen::Affine3d T_MD;
+  T_MD = Eigen::AngleAxisd(M_PI/8, Eigen::Vector3d::UnitZ());
+  T_MD.translation() << 5, 3, 0;
+
+  // create source/data point cloud
+  Eigen::Matrix3Xd data = T_MD.inverse() * model;
+
+
+  //
+  // Identify data association
+  //
+
+  // note that data types are specified by invariant class
+  clipper::Association A = clipper::Association();
+  Eigen::SparseMatrix<double> sM, sC;
+  std::tie(sM, sC) =
+      clipper::scoreSparsePairwiseConsistency(invariant, model, data, A, true);
+  auto soln = clipper::findDenseClusterOfSparseGraph(sM, sC, params);
+  clipper::Association Ainliers = clipper::selectInlierAssociations(soln, A);
+
+  ASSERT_EQ(Ainliers.rows(), N);
+  for (size_t i=0; i<Ainliers.rows(); ++i) {
+    EXPECT_EQ(Ainliers(i, 0), Ainliers(i, 1));
+  }
+
+}
+
