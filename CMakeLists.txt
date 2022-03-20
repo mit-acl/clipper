@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(clipper VERSION 0.1)
+project(clipper VERSION 0.2)
 
 set(CMAKE_CXX_STANDARD 14)
 if(NOT CMAKE_BUILD_TYPE)
@@ -69,8 +69,7 @@ endif()
 
 add_library(clipper SHARED)
 target_sources(clipper PRIVATE
-  src/find_dense_cluster.cpp
-  src/affinity.cpp
+  src/clipper.cpp
   src/utils.cpp
   src/invariants/euclidean_distance.cpp
   src/invariants/pointnormal_distance.cpp)

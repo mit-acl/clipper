@@ -21,8 +21,6 @@
 #include <indicators/cursor_control.hpp>
 
 #include <clipper/clipper.h>
-#include <clipper/find_dense_cluster.h>
-#include <clipper/invariants/builtins.h>
 
 #include "bm_utils.h"
 
@@ -94,14 +92,15 @@ clipper::Association get_ground_truth_associations(const Eigen::MatrixXd& pcd0,
 
 // ----------------------------------------------------------------------------
 
-clipper::invariants::EuclideanDistance
+clipper::invariants::PairwiseInvariantPtr
 build_euclidean_distance_invariant(double sigma, double epsilon)
 {
   // instantiate the invariant function that will be used to score associations
   clipper::invariants::EuclideanDistance::Params iparams;
   iparams.sigma = sigma;
   iparams.epsilon = epsilon;
-  clipper::invariants::EuclideanDistance invariant(iparams);
+  clipper::invariants::EuclideanDistancePtr invariant;
+  invariant.reset(new clipper::invariants::EuclideanDistance(iparams));
   return invariant;
 }
 
@@ -155,7 +154,7 @@ Trial stddev_trial(const trials_t& trials)
 // ----------------------------------------------------------------------------
 
 Trial bm_euclidean_distance(
-    clipper::invariants::EuclideanDistance invariant,
+    const clipper::invariants::PairwiseInvariantPtr& invariant,
     const Eigen::MatrixXd& pcd0, const BMParams& P)
 {
   Trial trial;
@@ -167,31 +166,29 @@ Trial bm_euclidean_distance(
     pcd1_aligned, Agt0, P.m, P.rho);
 
 
+  clipper::Params params;
+  clipper::CLIPPER clipper(invariant, params);
+  clipper.setParallelize(P.parallelize);
+
   const Eigen::Matrix3Xd model = pcd0.transpose();
   const Eigen::Matrix3Xd data = pcd1_aligned.transpose();
 
-  // Eigen::MatrixXd M, C;
-  Eigen::SparseMatrix<double> M, C;
-
   // time affinity matrix creation
   auto t1 = std::chrono::high_resolution_clock::now();
-  // std::tie(M, C) = clipper::scorePairwiseConsistency(invariant, model, data, A);
-  std::tie(M, C) = clipper::scoreSparsePairwiseConsistency(invariant, model, data, A);
+  clipper.scorePairwiseConsistency(model, data, A);
   auto t2 = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
   trial.t_affinity = static_cast<double>(duration.count()) * 1e-9;
 
   // time dense clique solver
-  clipper::Params params;
   t1 = std::chrono::high_resolution_clock::now();
-  // clipper::Solution soln = clipper::findDenseCluster(M, C);
-  clipper::Solution soln = clipper::findDenseClusterOfSparseGraph(M, C, params);
+  clipper.solve();
   t2 = std::chrono::high_resolution_clock::now();
   duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
   trial.t_solver = static_cast<double>(duration.count()) * 1e-9;
 
   // get p / r of clipper solution
-  const clipper::Association Ain = clipper::selectInlierAssociations(soln, A);
+  const clipper::Association Ain = clipper.getSelectedAssociations();
   std::tie(trial.p, trial.r) = utils::get_precision_recall(Ain, Agt);
 
   return trial;

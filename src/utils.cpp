@@ -53,5 +53,19 @@ std::vector<int> findIndicesOfkLargest(const Eigen::VectorXd& x, int k)
   return indices;
 }
 
+// ----------------------------------------------------------------------------
+
+std::tuple<size_t,size_t> k2ij(size_t k, size_t n)
+{
+  k += 1;
+
+  const size_t l = n*(n-1)/2 - k;
+  const size_t o = std::floor( (std::sqrt(1 + 8*l) - 1) / 2. );
+  const size_t p = l - o*(o+1)/2;
+  const size_t i = n - (o + 1);
+  const size_t j = n - p;
+  return {i-1, j-1};
+}
+
 } // ns utils
 } // ns clipper
