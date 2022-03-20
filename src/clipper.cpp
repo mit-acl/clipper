@@ -5,6 +5,8 @@
  * @date 19 March 2022
  */
 
+#include <iostream>
+
 #include "clipper/clipper.h"
 #include "clipper/utils.h"
 
@@ -24,16 +26,16 @@ void CLIPPER::scorePairwiseConsistency(const invariants::Data& D1,
 
   const size_t m = A_.rows();
 
-  // allocate memory for calculations
-  M_ = Affinity::Zero(m,m);
-  C_ = Constraint::Ones(m,m);
+  // reserve memory for nonzero affinity scores (potentially all)
+  std::vector<SpTriplet> Mcoeffs;
+  Mcoeffs.reserve(m*(m-1)/2);
 
 #pragma omp parallel for shared(A_, D1, D2, M_, C_) if(parallelize_)
   for (size_t k=0; k<m*(m-1)/2; ++k) {
     size_t i, j; std::tie(i, j) = utils::k2ij(k, m);
 
     if (A_(i,0) == A_(j,0) || A_(i,1) == A_(j,1)) {
-      C_(i,j) = C_(j,i) = 0; // distinctness constraint
+      // violates distinctness constraint
       continue;
     }
 
@@ -50,19 +52,27 @@ void CLIPPER::scorePairwiseConsistency(const invariants::Data& D1,
     const auto& d2j = D2.col(A_(j,1));
 
     const double scr = (*invariant_)(d1i, d1j, d2i, d2j);
-    if (scr > 0) M_(i,j) = M_(j,i) = scr;
-    else C_(i,j) = C_(j,i) = 0; // inconsistency constraint
+    if (scr > params_.affinityeps) { // does not violate inconsistency constraint
+#pragma omp critical
+      Mcoeffs.emplace_back(i, j, scr);
+    }
   }
 
   // make diagonals one
-  M_ += Eigen::MatrixXd::Identity(m,m);
+  for (size_t i=0; i<m; ++i) Mcoeffs.emplace_back(i,i,1);
+
+  M_.resize(m,m);
+  M_.setFromTriplets(Mcoeffs.begin(), Mcoeffs.end());
+
+  C_ = M_;
+  C_.coeffs() = 1;
 }
 
 // ----------------------------------------------------------------------------
 
 void CLIPPER::solve()
 {
-  findDenseClique(M_, C_, utils::randvec(M_.cols()));
+  findDenseClique(getAffinityMatrix(), getConstraintMatrix(), utils::randvec(M_.cols()));
 }
 
 // ----------------------------------------------------------------------------
@@ -83,28 +93,30 @@ Association CLIPPER::getSelectedAssociations()
 
 Affinity CLIPPER::getAffinityMatrix()
 {
-  return M_;
+  SpAffinity M = M_.selfadjointView<Eigen::Upper>();
+  return M;
 }
 
 // ----------------------------------------------------------------------------
 
 Constraint CLIPPER::getConstraintMatrix()
 {
-  return C_;
+  SpConstraint C = C_.selfadjointView<Eigen::Upper>();
+  return C;
 }
 
 // ----------------------------------------------------------------------------
 
 void CLIPPER::setAffinityMatrix(const Affinity& M)
 {
-  M_ = M;
+  M_ = M.sparseView();
 }
 
 // ----------------------------------------------------------------------------
 
 void CLIPPER::setConstraintMatrix(const Constraint& C)
 {
-  C_ = C;
+  C_ = C.sparseView();
 }
 
 // ----------------------------------------------------------------------------
@@ -115,6 +127,7 @@ void CLIPPER::findDenseClique(const Affinity& _M, const Constraint& C,
                           const Eigen::VectorXd& u0)
 {
   const auto t1 = std::chrono::high_resolution_clock::now();
+
   //
   // Initialization
   //

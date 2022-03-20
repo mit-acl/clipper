@@ -34,6 +34,8 @@ namespace clipper {
     int maxlsiters = 99; ///< maximum number of line search iters per grad step
 
     double eps = 1e-9; ///< numerical threshold around 0
+
+    double affinityeps = 1e-4; ///< sparsity-promoting threshold for affinities
   };
 
   /**
@@ -89,18 +91,15 @@ namespace clipper {
 
     bool parallelize_ = true; ///< should affinity calculation be parallelized
 
-    // SpAffinity M_;
-    // SpAffinity C_;
-
     Association A_; ///< initial (putative) set of associations
 
     // \brief Problem data from latest instance of data association
     Solution soln_; ///< solution information from CLIPPER dense clique solver
-    Affinity M_; ///< affinity matrix (i.e., weighted consistency graph)
-    Constraint C_; ///< constraint matrix (i.e., prevents forming links)
+    SpAffinity M_; ///< affinity matrix (i.e., weighted consistency graph)
+    SpConstraint C_; ///< constraint matrix (i.e., prevents forming links)
 
     /**
-     * @brief      Identifies a dense cluster of an undirected graph G from its
+     * @brief      Identifies a dense clique of an undirected graph G from its
      *             weighted affinity matrix M while satisfying any active
      *             constraints in C (indicated with zeros).
      *
@@ -117,11 +116,6 @@ namespace clipper {
      *                      densest cluster/node weights should not be considered
      *                      set the diagonal of M to identity.
      * @param[in]  C        nxn binary constraint matrix. Active const. are 0.
-     * @param[in]  params   Parameters of the algorithm run
-     *
-     * @tparam     T        Can handle dense or sparse Eigen matrices
-     *
-     * @return     Solutions structure containing dense cluster
      */
     void findDenseClique(const Affinity& _M, const Constraint& C,
                           const Eigen::VectorXd& u0);

@@ -8,14 +8,18 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
 
 namespace clipper {
+
+  using SpMat = Eigen::SparseMatrix<double>;
+  using SpTriplet = Eigen::Triplet<double>;
 
   using Association = Eigen::Matrix<int, Eigen::Dynamic, 2>;
   using Affinity = Eigen::MatrixXd;
   using Constraint = Eigen::MatrixXd;
 
-  using SpAffinity = Eigen::MatrixXd;
-  using SpConstraint = Eigen::MatrixXd;
+  using SpAffinity = SpMat;
+  using SpConstraint = SpMat;
 
 } // ns clipper
