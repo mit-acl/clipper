@@ -12,6 +12,7 @@
 #include <map>
 #include <memory>
 #include <random>
+#include <unordered_set>
 
 #include "bm_utils.h"
 
@@ -263,6 +264,16 @@ bool is_row_contained_in(const Eigen::RowVectorXi& row, const Eigen::MatrixXi& m
 
 // ----------------------------------------------------------------------------
 
+Eigen::Vector2i k2ij_full(size_t k, size_t ncols)
+{
+  // this function does not assume symmetry like clipper::utils::k2ij
+  const size_t r = k / ncols;
+  const size_t c = k % ncols;
+  return Eigen::Vector2i(r, c);
+}
+
+// ----------------------------------------------------------------------------
+
 std::pair<clipper::Association, clipper::Association>
 generate_synthetic_correspondences(const Eigen::MatrixXd& pcd0,
     const Eigen::MatrixXd& pcd1, const clipper::Association& Agood,
@@ -304,9 +315,12 @@ generate_synthetic_correspondences(const Eigen::MatrixXd& pcd0,
   }
 
   // Sample from all possible associations
-  const clipper::Association Aall = clipper::utils::createAllToAll(pcd0.rows(), pcd1.rows());
-  std::uniform_int_distribution<> dis(0, Aall.rows());
-  std::vector<bool> mask(Aall.rows(), false);
+  // const clipper::Association Aall =
+  //      clipper::utils::createAllToAll(pcd0.rows(), pcd1.rows()); // too slow
+  const size_t mall = pcd0.rows() * pcd1.rows();
+  std::uniform_int_distribution<size_t> dis(0, mall);
+  std::vector<bool> mask(mall, false);
+  // std::unordered_set<size_t> tried;
 
   // select the outliers to use
   size_t nele = 0;
@@ -319,10 +333,15 @@ generate_synthetic_correspondences(const Eigen::MatrixXd& pcd0,
     if (mask[k]) continue;
     mask[k] = true;
 
-    // make sure this association is not good
-    if (is_row_contained_in(Aall.row(k), Agood)) continue;
+    // create the appropriate row of Aall on the fly
+    Eigen::Vector2i row = k2ij_full(k, pcd1.rows());
 
-    A.row(nele) = Aall.row(k);
+    // make sure this association is not good
+    if (is_row_contained_in(row, Agood)) {
+      continue;
+    }
+
+    A.row(nele) = row;
     ++nele;
   }
 

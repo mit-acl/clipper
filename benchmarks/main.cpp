@@ -16,7 +16,7 @@
 #include <Eigen/Dense>
 
 #include <fort.hpp>
-#include <indicators/progress_bar.hpp>
+#include <indicators/block_progress_bar.hpp>
 #include <indicators/cursor_control.hpp>
 
 #include <clipper/clipper.h>
@@ -178,14 +178,13 @@ int main(int argc, char const *argv[])
   size_t M;
 
   if (full) {
-    num_assocs = { 50, 100, 500, 1000, 4000, 10000, 16000 };
-    outrats = {0, 0.5, 0.8, 0.9};
+    num_assocs = { 64, 256, 512, 1024, 2048, /*4096*/ };
+    outrats = {0, 0.2, 0.4, 0.8, 0.9};
     M = 10;
   } else {
-    num_assocs = { 50, 100, 500, 1000, /*4000, 10000, 16000*/ };
-    outrats = {0, 0.5, 0.8, 0.9};
-
-    M = 1;
+    num_assocs = { 64, 256, 512, 1024, 2048, /*4096*/ };
+    outrats = {0, 0.2, 0.4, 0.8, 0.9};
+    M = 10;
   }
 
   std::cout << std::endl;
@@ -214,15 +213,17 @@ int main(int argc, char const *argv[])
   // progress bar configuration
   std::cout << std::endl;
   indicators::show_console_cursor(false);
-  indicators::ProgressBar bar{
+  indicators::BlockProgressBar bar{
     indicators::option::BarWidth{50},
-    indicators::option::Start{"["},
-    indicators::option::Fill{"="},
-    indicators::option::Lead{">"},
-    indicators::option::Remainder{" "},
+    indicators::option::Start{" ["},
+    // indicators::option::Fill{"█"},
+    // indicators::option::Lead{"█"},
+    // indicators::option::Remainder{"-"},
     indicators::option::End{"]"},
-    indicators::option::PostfixText{"Running Benchmarks"},
-    indicators::option::ForegroundColor{indicators::Color::yellow},
+    // indicators::option::PostfixText{"Running Benchmarks"},
+    indicators::option::ShowElapsedTime{true},
+    // indicators::option::ShowRemainingTime{true},
+    // indicators::option::ForegroundColor{indicators::Color::yellow},
     indicators::option::FontStyles{std::vector<indicators::FontStyle>{indicators::FontStyle::bold}}
   };
 
@@ -231,7 +232,7 @@ int main(int argc, char const *argv[])
   size_t tick = 0;
 
   for (const double rho : outrats) {
-    bar.set_option(indicators::option::PostfixText{"Benchmarking ρ = " + std::to_string(static_cast<int>(rho*100)) + "%"});
+    bar.set_option(indicators::option::PrefixText{"Benchmarking ρ = " + std::to_string(static_cast<int>(rho*100)) + "%"});
     for (const int m : num_assocs) {
 
       BMParams bm_params;
@@ -261,7 +262,7 @@ int main(int argc, char const *argv[])
   }
 
   indicators::show_console_cursor(true);
-  std::cout << std::endl;
+  std::cout << std::endl << std::endl;
 
   std::cout << table.to_string() << std::endl;
   return 0;
