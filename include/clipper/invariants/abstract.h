@@ -39,6 +39,8 @@ namespace invariants {
     virtual ~Invariant() = default;
   };
 
+  using InvariantPtr = std::shared_ptr<Invariant>;
+
   /**
    * @brief      A pairwise invariant uses pairs of points to score association
    *             consistency. This class implements a real-valued invariant

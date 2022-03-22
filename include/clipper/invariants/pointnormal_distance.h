@@ -50,5 +50,7 @@ namespace invariants {
     Params params_;
   };
 
+  using PointNormalDistancePtr = std::shared_ptr<PointNormalDistance>;
+
 } // ns invariants
 } // ns clipper

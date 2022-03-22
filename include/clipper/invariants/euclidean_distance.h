@@ -46,5 +46,7 @@ namespace invariants {
     Params params_;
   };
 
+  using EuclideanDistancePtr = std::shared_ptr<EuclideanDistance>;
+
 } // ns invariants
 } // ns clipper

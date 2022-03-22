@@ -14,6 +14,7 @@
 #include <Eigen/Dense>
 
 #include "clipper/invariants/abstract.h"
+#include "clipper/types.h"
 
 namespace clipper {
 namespace utils {
@@ -36,6 +37,36 @@ namespace utils {
    * @return     Indices of the largest elements in vector x
    */
   std::vector<int> findIndicesOfkLargest(const Eigen::VectorXd& x, int k);
+
+  /**
+   * @brief      Creates an all-to-all association hypothesis
+   *
+   * @param[in]  n1    Number of items in view 1
+   * @param[in]  n2    Number of items in view 2
+   *
+   * @return     an (n1*n2)x2 association matrix
+   */
+  inline Association createAllToAll(size_t n1, size_t n2)
+  {
+    Association A = Association(n1*n2, 2);
+    for (size_t i=0; i<n1; ++i) {
+      for (size_t j=0; j<n2; ++j) {
+        A(j + i*n2, 0) = i;
+        A(j + i*n2, 1) = j;
+      }
+    }
+    return A;
+  }
+
+  /**
+ * @brief      Maps a flat index to coordinate of a square symmetric matrix
+ *
+ * @param[in]  k     The flat index to find the corresponding r,c of
+ * @param[in]  n     Dimension of the square, symmetric matrix
+ *
+ * @return     row, col of a matrix corresponding to flat index k
+ */
+  std::tuple<size_t,size_t> k2ij(size_t k, size_t n);
 
   /**
    * @brief      Simple named profiling timer

@@ -16,7 +16,6 @@
 
 #include "clipper/clipper.h"
 #include "clipper/utils.h"
-#include "clipper/invariants/builtins.h"
 
 #include "trampolines.h"
 
@@ -48,11 +47,11 @@ void pybind_invariants(py::module& m)
   py::class_<EuclideanDistance::Params>(m, "EuclideanDistanceParams")
     .def(py::init<>())
     .def("__repr__", [](const EuclideanDistance::Params &params) {
-       std::ostringstream repr;
-       repr << "<EuclideanDistanceParams : sigma=" << params.sigma;
-       repr << " epsilon=" << params.epsilon;
-       repr << " mindist=" << params.mindist << ">";
-       return repr.str();
+      std::ostringstream repr;
+      repr << "<EuclideanDistanceParams : sigma=" << params.sigma;
+      repr << " epsilon=" << params.epsilon;
+      repr << " mindist=" << params.mindist << ">";
+      return repr.str();
     })
     .def_readwrite("sigma", &clipper::invariants::EuclideanDistance::Params::sigma)
     .def_readwrite("epsilon", &clipper::invariants::EuclideanDistance::Params::epsilon)
@@ -68,11 +67,11 @@ void pybind_invariants(py::module& m)
   py::class_<PointNormalDistance::Params>(m, "PointNormalDistanceParams")
     .def(py::init<>())
     .def("__repr__", [](const PointNormalDistance::Params &params) {
-       std::ostringstream repr;
-       repr << "<PointNormalDistanceParams : sigp=" << params.sigp;
-       repr << " epsp=" << params.epsp << " sign=" << params.sign;
-       repr << " epsn=" << params.epsn << ">";
-       return repr.str();
+      std::ostringstream repr;
+      repr << "<PointNormalDistanceParams : sigp=" << params.sigp;
+      repr << " epsp=" << params.epsp << " sign=" << params.sign;
+      repr << " epsn=" << params.epsn << ">";
+      return repr.str();
     })
     .def_readwrite("sigp", &clipper::invariants::PointNormalDistance::Params::sigp)
     .def_readwrite("epsp", &clipper::invariants::PointNormalDistance::Params::epsp)
@@ -83,20 +82,41 @@ void pybind_invariants(py::module& m)
     .def(py::init<const PointNormalDistance::Params&>());
 }
 
-PYBIND11_MODULE(clipper, m)
+// ----------------------------------------------------------------------------
+
+void pybind_utils(py::module& m)
 {
-  m.doc() = "CLIPPER is a graph-theoretic framework for robust data association";
+  m.doc() = "Various convenience utilities for working with CLIPPER";
+
+  m.def("create_all_to_all", clipper::utils::createAllToAll,
+    "n1"_a, "n2"_a,
+    "Create an all-to-all hypothesis for association. Useful for the case of"
+    " no prior information or putative associations.");
+
+  m.def("k2ij", clipper::utils::k2ij,
+    "k"_a, "n"_a,
+    "Maps a flat index k to coordinate of a square nxn symmetric matrix");
+}
+
+// ----------------------------------------------------------------------------
+
+PYBIND11_MODULE(clipperpy, m)
+{
+  m.doc() = "A graph-theoretic framework for robust data association";
   m.attr("__version__") = PROJECT_VERSION;
 
   py::module m_invariants = m.def_submodule("invariants");
   pybind_invariants(m_invariants);
 
+  py::module m_utils = m.def_submodule("utils");
+  pybind_utils(m_utils);
+
   py::class_<clipper::Params>(m, "Params")
     .def(py::init<>())
     .def("__repr__", [](const clipper::Params &params) {
-       std::ostringstream repr;
-       repr << "<Parameters for CLIPPER dense cluster solver>";
-       return repr.str();
+      std::ostringstream repr;
+      repr << "<CLIPPER Parameters>";
+      return repr.str();
     })
     .def_readwrite("tol_u", &clipper::Params::tol_u)
     .def_readwrite("tol_F", &clipper::Params::tol_F)
@@ -110,9 +130,9 @@ PYBIND11_MODULE(clipper, m)
   py::class_<clipper::Solution>(m, "Solution")
     .def(py::init<>())
     .def("__repr__", [](const clipper::Solution &soln) {
-       std::ostringstream repr;
-       repr << "<CLIPPER dense cluster solution>";
-       return repr.str();
+      std::ostringstream repr;
+      repr << "<CLIPPER Solution>";
+      return repr.str();
     })
     .def_readwrite("t", &clipper::Solution::t)
     .def_readwrite("ifinal", &clipper::Solution::ifinal)
@@ -120,70 +140,36 @@ PYBIND11_MODULE(clipper, m)
     .def_readwrite("u", &clipper::Solution::u)
     .def_readwrite("score", &clipper::Solution::score);
 
-  m.def("create_all_to_all", clipper::createAllToAll,
-    "n1"_a, "n2"_a,
-    "Create an all-to-all hypothesis for association. Useful for the case of"
-    " no prior information or putative associations.");
-
-  m.def("score_pairwise_consistency", [](const clipper::invariants::PairwiseInvariantPtr& invariant,
-                        const clipper::invariants::Data& D1, const clipper::invariants::Data& D2,
-                        clipper::Association& A) {
-
-    // indicates if calls to invariant can be made in parallel. This is primarily to
-    // prevent GIL-related resource deadlocking for derived classes in Python. See also
-    // https://github.com/pybind/pybind11/issues/813
-    // Python extended c++ classes will inherit from PyPairwiseInvariant
-    bool parallelize = (std::dynamic_pointer_cast<PyPairwiseInvariant<>>(invariant)) ? false : true;
-    auto ret = clipper::scorePairwiseConsistency(invariant, D1, D2, A, parallelize);
-    return ret;
-
-  }, py::call_guard<py::gil_scoped_release>(),
-    "invariant"_a, "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a,
-    "Scores consistency between pairs of associations in A");
-
-  m.def(
-      "score_sparse_pairwise_consistency",
-      [](const clipper::invariants::PairwiseInvariantPtr &invariant,
-         const clipper::invariants::Data &D1,
-         const clipper::invariants::Data &D2, clipper::Association &A) {
-        // indicates if calls to invariant can be made in parallel. This is
-        // primarily to prevent GIL-related resource deadlocking for derived
-        // classes in Python. See also
-        // https://github.com/pybind/pybind11/issues/813
-        // Python extended c++ classes will inherit from PyPairwiseInvariant
-        bool parallelize =
-            (std::dynamic_pointer_cast<PyPairwiseInvariant<>>(invariant))
-                ? false
-                : true;
-        // hacky way
-        auto ret = clipper::scoreSparsePairwiseConsistency(*invariant, D1, D2,
-                                                           A, parallelize);
-        return ret;
-      },
-      py::call_guard<py::gil_scoped_release>(), "invariant"_a,
-      "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a,
-      "Scores sparse consistency between pairs of associations in A");
-
-
-
-  m.def("find_dense_cluster",
-    py::overload_cast<const Eigen::MatrixXd&, const Eigen::MatrixXd&,
-          const clipper::Params&>(clipper::findDenseCluster<Eigen::MatrixXd>),
-    "M"_a.noconvert(), "C"_a.noconvert(), "params"_a);
-
-  m.def("find_dense_cluster",
-    py::overload_cast<const Eigen::MatrixXd&, const Eigen::MatrixXd&, const Eigen::VectorXd&,
-          const clipper::Params&>(clipper::findDenseCluster<Eigen::MatrixXd>),
-    "M"_a.noconvert(), "C"_a.noconvert(), "u0"_a, "params"_a);
-
-
-    m.def("find_dense_cluster_of_sparse_graph",
-        py::overload_cast<const Eigen::SparseMatrix<double> &,
-                          const Eigen::SparseMatrix<double> &,
-                          const clipper::Params &>(
-            clipper::findDenseClusterOfSparseGraph),
-        "M"_a.noconvert(), "C"_a.noconvert(), "params"_a);
-
-  m.def("select_inlier_associations", &clipper::selectInlierAssociations,
-    "soln"_a, "A"_a);
+  py::class_<clipper::CLIPPER>(m, "CLIPPER")
+    .def(py::init(
+      [](const clipper::invariants::PairwiseInvariantPtr& invariant,
+          const clipper::Params& params)
+      {
+        clipper::CLIPPER *clipper = new clipper::CLIPPER(invariant, params);
+        // Python extended c++ classes cannot use parallelization due to
+        // GIL-related resoure deadlocking issues for derived classes.
+        // See also https://github.com/pybind/pybind11/issues/813.
+        // Python extended c++ classes will inherit from PyPairwiseInvariant.
+        clipper->setParallelize(false);
+        return clipper;
+      }))
+    .def("__repr__", [](const clipper::CLIPPER &clipper) {
+      std::ostringstream repr;
+      repr << "<CLIPPER>";
+      return repr.str();
+    })
+    .def("score_pairwise_consistency", &clipper::CLIPPER::scorePairwiseConsistency,
+          // py::call_guard<py::gil_scoped_release>(),
+          "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a)
+    .def("solve", &clipper::CLIPPER::solve)
+    .def("get_initial_associations", &clipper::CLIPPER::getInitialAssociations)
+    .def("get_selected_associations", &clipper::CLIPPER::getSelectedAssociations)
+    .def("get_solution", &clipper::CLIPPER::getSolution)
+    .def("get_affinity_matrix", &clipper::CLIPPER::getAffinityMatrix)
+    .def("get_constraint_matrix", &clipper::CLIPPER::getConstraintMatrix)
+    .def("set_affinity_matrix", &clipper::CLIPPER::setAffinityMatrix,
+          "M"_a.noconvert())
+    .def("set_constraint_matrix", &clipper::CLIPPER::setConstraintMatrix,
+          "C"_a.noconvert())
+    .def("set_parallelize", &clipper::CLIPPER::setParallelize);
 }
