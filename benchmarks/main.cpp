@@ -170,18 +170,22 @@ Trial bm_euclidean_distance(
   const Eigen::Matrix3Xd model = pcd0.transpose();
   const Eigen::Matrix3Xd data = pcd1_aligned.transpose();
 
-  Eigen::MatrixXd M, C;
+  // Eigen::MatrixXd M, C;
+  Eigen::SparseMatrix<double> M, C;
 
   // time affinity matrix creation
   auto t1 = std::chrono::high_resolution_clock::now();
-  std::tie(M, C) = clipper::scorePairwiseConsistency(invariant, model, data, A);
+  // std::tie(M, C) = clipper::scorePairwiseConsistency(invariant, model, data, A);
+  std::tie(M, C) = clipper::scoreSparsePairwiseConsistency(invariant, model, data, A);
   auto t2 = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
   trial.t_affinity = static_cast<double>(duration.count()) * 1e-9;
 
   // time dense clique solver
+  clipper::Params params;
   t1 = std::chrono::high_resolution_clock::now();
-  clipper::Solution soln = clipper::findDenseCluster(M, C);
+  // clipper::Solution soln = clipper::findDenseCluster(M, C);
+  clipper::Solution soln = clipper::findDenseClusterOfSparseGraph(M, C, params);
   t2 = std::chrono::high_resolution_clock::now();
   duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
   trial.t_solver = static_cast<double>(duration.count()) * 1e-9;
