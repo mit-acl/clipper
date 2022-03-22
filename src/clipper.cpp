@@ -51,11 +51,12 @@ void CLIPPER::scorePairwiseConsistency(const invariants::Data& D1,
 
     const double scr = (*invariant_)(d1i, d1j, d2i, d2j);
     if (scr > params_.affinityeps) { // does not violate inconsistency constraint
-      M(i,j) = M(j,i) = scr;
+      M(i,j) = scr;
     }
   }
 
-  M += Eigen::MatrixXd::Identity(m, m);
+  // Identity on diagonal is taken care of implicitly in findDenseClique()
+  // M += Eigen::MatrixXd::Identity(m, m);
 
   M_ = M.sparseView();
 
@@ -67,7 +68,7 @@ void CLIPPER::scorePairwiseConsistency(const invariants::Data& D1,
 
 void CLIPPER::solve()
 {
-  findDenseClique(getAffinityMatrix(), getConstraintMatrix(), utils::randvec(M_.cols()));
+  findDenseClique(utils::randvec(M_.cols()));
 }
 
 // ----------------------------------------------------------------------------
@@ -88,20 +89,18 @@ Association CLIPPER::getSelectedAssociations()
 
 Affinity CLIPPER::getAffinityMatrix()
 {
-  return SpAffinity(M_.selfadjointView<Eigen::Upper>());
-  // Affinity M = SpAffinity(M_.selfadjointView<Eigen::Upper>())
-  //               + Affinity::Identity(M_.rows(), M_.cols());
-  // return M;
+  Affinity M = SpAffinity(M_.selfadjointView<Eigen::Upper>())
+                + Affinity::Identity(M_.rows(), M_.cols());
+  return M;
 }
 
 // ----------------------------------------------------------------------------
 
 Constraint CLIPPER::getConstraintMatrix()
 {
-  return SpConstraint(C_.selfadjointView<Eigen::Upper>());
-  // Constraint C = SpConstraint(C_.selfadjointView<Eigen::Upper>())
-  //                 + Constraint::Identity(C_.rows(), C_.cols());
-  // return C;
+  Constraint C = SpConstraint(C_.selfadjointView<Eigen::Upper>())
+                  + Constraint::Identity(C_.rows(), C_.cols());
+  return C;
 }
 
 // ----------------------------------------------------------------------------
@@ -124,8 +123,7 @@ void CLIPPER::setConstraintMatrix(const Constraint& C)
 // Private Methods
 // ----------------------------------------------------------------------------
 
-void CLIPPER::findDenseClique(const Affinity& _M, const Constraint& C,
-                          const Eigen::VectorXd& u0)
+void CLIPPER::findDenseClique(const Eigen::VectorXd& u0)
 {
   const auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -133,35 +131,27 @@ void CLIPPER::findDenseClique(const Affinity& _M, const Constraint& C,
   // Initialization
   //
 
-  const size_t n = _M.cols();
-
-  // Zero out any entry corresponding to an active constraint
-  const Eigen::MatrixXd M = _M.cwiseProduct(C);
-
-  // Binary complement of constraint matrix
-  const Eigen::MatrixXd Cb = Eigen::MatrixXd::Ones(n,n) - C;
+  const size_t n = M_.cols();
+  const Eigen::VectorXd ones = Eigen::VectorXd::Ones(n);
 
   // one step of power method to have a good scaling of u
-  Eigen::VectorXd u = M * u0;
+  Eigen::VectorXd u = M_.selfadjointView<Eigen::Upper>() * u0 + u0;
   u /= u.norm();
 
   // initial value of d
   double d = 0; // zero if there are no active constraints
-  Eigen::MatrixXd Cbu = Cb * u;
+  Eigen::VectorXd Cbu = ones * u.sum() - C_.selfadjointView<Eigen::Upper>() * u - u;
   const auto idxD = ((Cbu.array()>params_.eps) && (u.array()>params_.eps));
   if (idxD.sum() > 0) {
-    Eigen::MatrixXd Mu = M * u;
+    Eigen::VectorXd Mu = M_.selfadjointView<Eigen::Upper>() * u + u;
     const Eigen::VectorXd num = idxD.select(Mu, std::numeric_limits<double>::infinity());
     const Eigen::VectorXd den = idxD.select(Cbu, 1);
     d = (num.array() / den.array()).minCoeff();
   }
 
-  Eigen::MatrixXd Md = Eigen::MatrixXd(M.rows(), M.cols());
-  // homotopy(Md, M, Cb, d);
-  Md = M - d*Cb;
-
   // initialize memory
   Eigen::VectorXd gradF = Eigen::VectorXd(n);
+  Eigen::VectorXd gradFnew = Eigen::VectorXd(n);
   Eigen::VectorXd unew = Eigen::VectorXd(n);
   Eigen::VectorXd Mu = Eigen::VectorXd(n);
   Eigen::VectorXd num = Eigen::VectorXd(n);
@@ -175,34 +165,14 @@ void CLIPPER::findDenseClique(const Affinity& _M, const Constraint& C,
 
   size_t i, j, k; // iteration counters
   for (i=0; i<params_.maxoliters; ++i) {
-    F = u.transpose() * Md * u; // current objective value
+    gradF = (1 + d) * u - d * ones * u.sum() + M_.selfadjointView<Eigen::Upper>() * u + C_.selfadjointView<Eigen::Upper>() * u * d;
+    F = u.dot(gradF); // current objective value
 
     //
     // Orthogonal projected gradient ascent
     //
 
     for (j=0; j<params_.maxiniters; ++j) {
-      gradF = Md * u;
-
-      // if (params_.orthogonal) {
-      //   // orthogonal projection of gradient onto tangent plane to S^n at u
-      //   gradF = gradF - (gradF.transpose() * u) * u;
-
-      //   if (gradF.norm() < params_.tol_Fop) break;
-      // }
-
-      // double alpha = params_.alpha;
-      // if (alpha <= 0) {
-      //   const auto idxA = ((gradF.array()<-params_.eps) && (u.array()>params_.eps));
-      //   if (idxA.sum()) {
-      //     const Eigen::VectorXd num = idxA.select(u, std::numeric_limits<double>::infinity());
-      //     const Eigen::VectorXd den = idxA.select(gradF, 1);
-      //     alpha = (num.array() / den.array()).abs().minCoeff();
-      //   } else {
-      //     alpha = std::pow(1.0/params_.beta, 3) / gradF.norm();
-      //   }
-      // }
-
       double alpha = 1;
 
       //
@@ -214,7 +184,12 @@ void CLIPPER::findDenseClique(const Affinity& _M, const Constraint& C,
         unew = u + alpha * gradF;                     // gradient step
         unew = unew.cwiseMax(0);                      // project onto positive orthant
         unew.normalize();                             // project onto S^n
-        Fnew = unew.transpose() * Md * unew;          // new objective value after step
+        gradFnew = (1 + d) * unew // because M/C is missing identity on diagonal
+                    - d * ones * unew.sum()
+                    + M_.selfadjointView<Eigen::Upper>() * unew
+                    + C_.selfadjointView<Eigen::Upper>() * unew * d;
+        Fnew = unew.dot(gradFnew);                    // new objective value after step
+
         deltaF = Fnew - F;                            // change in objective value
 
         if (deltaF < -params_.eps) {
@@ -238,17 +213,15 @@ void CLIPPER::findDenseClique(const Affinity& _M, const Constraint& C,
     // Increase d
     //
 
-    Cbu = Cb * u;
+    Cbu = ones * u.sum() - C_.selfadjointView<Eigen::Upper>() * u - u;
     const auto idxD = ((Cbu.array() > params_.eps) && (u.array() > params_.eps));
     if (idxD.sum() > 0) {
-      Mu = M * u;
+      Mu = M_.selfadjointView<Eigen::Upper>() * u + u;
       num = idxD.select(Mu, std::numeric_limits<double>::infinity());
       den = idxD.select(Cbu, 1);
       const double deltad = (num.array() / den.array()).abs().minCoeff();
 
       d += deltad;
-      // homotopy(Md, M, Cb, d);
-      Md = M - d*Cb;
 
     } else {
       break;

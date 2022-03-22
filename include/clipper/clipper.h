@@ -117,8 +117,7 @@ namespace clipper {
      *                      set the diagonal of M to identity.
      * @param[in]  C        nxn binary constraint matrix. Active const. are 0.
      */
-    void findDenseClique(const Affinity& _M, const Constraint& C,
-                          const Eigen::VectorXd& u0);
+    void findDenseClique(const Eigen::VectorXd& u0);
 
     /**
      * @brief      Convenience function to select inlier associations
