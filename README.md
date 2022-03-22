@@ -11,14 +11,16 @@ This repo provides both MATLAB and C++ implementations of the CLIPPER framework.
 
 If you find this code useful in your research, please cite our paper:
 
-- P.C. Lusk, K. Fathian, and J.P. How, "CLIPPER: A Graph-Theoretic Framework for Robust Data Association," arXiv preprint arXiv:2011.10202, 2020. ([**pdf**](https://arxiv.org/pdf/2011.10202.pdf)) ([**presentation**](https://youtu.be/QYLHueMhShY))
+- P. C. Lusk, K. Fathian and J. P. How, "CLIPPER: A Graph-Theoretic Framework for Robust Data Association," 2021 IEEE International Conference on Robotics and Automation (ICRA), 2021, pp. 13828-13834, doi: 10.1109/ICRA48506.2021.9561069. ([**pdf**](https://arxiv.org/pdf/2011.10202.pdf)) ([**video**](https://youtu.be/QYLHueMhShY))
 
 ```bibtex
-@inproceedings{lusk2020clipper,
-  title={CLIPPER: A Graph-Theoretic Framework for Robust Data Association},
+@inproceedings{lusk2021clipper,
+  title={{CLIPPER}: A graph-theoretic framework for robust data association},
   author={Lusk, Parker C and Fathian, Kaveh and How, Jonathan P},
-  booktitle={IEEE International Conference on Robotics and Automation (ICRA)},
-  year={2021}
+  booktitle={2021 IEEE International Conference on Robotics and Automation (ICRA)},
+  pages={13828--13834},
+  year={2021},
+  organization={IEEE}
 }
 ```
 
@@ -66,8 +68,9 @@ The following `cmake` options are available when building CLIPPER:
 | Option                  | Description                                                                                                                                                                     | Default |
 |-------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------|
 | `BUILD_BINDINGS_PYTHON` | Uses [`pybind11`](https://github.com/pybind/pybind11) to create Python bindings for CLIPPER                                                                                     | `ON`    |
-| `BUILD_BINDINGS_MATLAB` | Attempts to build MEX files which are required for the MATLAB examples. A MATLAB installation is required. Gracefully fails if not found.                                     | `ON`    |
+| `BUILD_BINDINGS_MATLAB` | Attempts to build MEX files which are required for the MATLAB examples. A MATLAB installation is required. Gracefully fails if not found.                                     | `OFF`    |
 | `BUILD_TESTS`           | Builds C++ tests                                                                                                                                                                | `OFF`    |
+| `BUILD_BENCHMARKS`      | Builds C++ timing benchmarks                                                                                                                                                                | `OFF`    |
 | `ENABLE_MKL`            | Attempts to use [Intel MKL](https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl.html) (if installed) with Eigen for accelerated linear algebra. | `OFF`   |
 | `ENABLE_BLAS`           | Attempts to use a BLAS with Eigen for accelerated linear algebra.                                                                                                               | `OFF`   |
 

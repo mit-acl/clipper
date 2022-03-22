@@ -15,7 +15,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 ###############################################################################
 
 option(BUILD_BINDINGS_PYTHON "Build Python bindings" ON)
-option(BUILD_BINDINGS_MATLAB "Build MATLAB bindings" ON)
+option(BUILD_BINDINGS_MATLAB "Build MATLAB bindings" OFF)
 option(BUILD_TESTS "Build testsuite" OFF)
 option(BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(ENABLE_MKL "Use MKL with Eigen" OFF)
