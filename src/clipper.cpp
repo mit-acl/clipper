@@ -26,9 +26,7 @@ void CLIPPER::scorePairwiseConsistency(const invariants::Data& D1,
 
   const size_t m = A_.rows();
 
-  // reserve memory for nonzero affinity scores (potentially all)
-  std::vector<SpTriplet> Mcoeffs;
-  Mcoeffs.reserve(m*(m-1)/2);
+  Eigen::MatrixXd M = Eigen::MatrixXd::Zero(m, m);
 
 #pragma omp parallel for shared(A_, D1, D2, M_, C_) if(parallelize_)
   for (size_t k=0; k<m*(m-1)/2; ++k) {
@@ -53,16 +51,13 @@ void CLIPPER::scorePairwiseConsistency(const invariants::Data& D1,
 
     const double scr = (*invariant_)(d1i, d1j, d2i, d2j);
     if (scr > params_.affinityeps) { // does not violate inconsistency constraint
-#pragma omp critical
-      Mcoeffs.emplace_back(i, j, scr);
+      M(i,j) = M(j,i) = scr;
     }
   }
 
-  // make diagonals one
-  for (size_t i=0; i<m; ++i) Mcoeffs.emplace_back(i,i,1);
+  M += Eigen::MatrixXd::Identity(m, m);
 
-  M_.resize(m,m);
-  M_.setFromTriplets(Mcoeffs.begin(), Mcoeffs.end());
+  M_ = M.sparseView();
 
   C_ = M_;
   C_.coeffs() = 1;
@@ -93,16 +88,20 @@ Association CLIPPER::getSelectedAssociations()
 
 Affinity CLIPPER::getAffinityMatrix()
 {
-  SpAffinity M = M_.selfadjointView<Eigen::Upper>();
-  return M;
+  return SpAffinity(M_.selfadjointView<Eigen::Upper>());
+  // Affinity M = SpAffinity(M_.selfadjointView<Eigen::Upper>())
+  //               + Affinity::Identity(M_.rows(), M_.cols());
+  // return M;
 }
 
 // ----------------------------------------------------------------------------
 
 Constraint CLIPPER::getConstraintMatrix()
 {
-  SpConstraint C = C_.selfadjointView<Eigen::Upper>();
-  return C;
+  return SpConstraint(C_.selfadjointView<Eigen::Upper>());
+  // Constraint C = SpConstraint(C_.selfadjointView<Eigen::Upper>())
+  //                 + Constraint::Identity(C_.rows(), C_.cols());
+  // return C;
 }
 
 // ----------------------------------------------------------------------------
@@ -110,6 +109,7 @@ Constraint CLIPPER::getConstraintMatrix()
 void CLIPPER::setAffinityMatrix(const Affinity& M)
 {
   M_ = M.sparseView();
+  M_.diagonal().setZero();
 }
 
 // ----------------------------------------------------------------------------
@@ -117,6 +117,7 @@ void CLIPPER::setAffinityMatrix(const Affinity& M)
 void CLIPPER::setConstraintMatrix(const Constraint& C)
 {
   C_ = C.sparseView();
+  C_.diagonal().setZero();
 }
 
 // ----------------------------------------------------------------------------
