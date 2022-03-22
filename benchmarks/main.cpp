@@ -10,6 +10,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -121,6 +122,33 @@ Trial average_trial(const trials_t& trials)
   avg.r /= trials.size();
 
   return avg;
+}
+
+// ----------------------------------------------------------------------------
+
+Trial stddev_trial(const trials_t& trials)
+{
+  const Trial avg = average_trial(trials);
+
+  Trial sd;
+  for (const auto& trial : trials) {
+    sd.t_affinity += std::pow(trial.t_affinity - avg.t_affinity, 2);
+    sd.t_solver += std::pow(trial.t_solver - avg.t_solver, 2);
+    sd.p += std::pow(trial.p - avg.p, 2);
+    sd.r += std::pow(trial.r - avg.r, 2);
+  }
+
+  sd.t_affinity /= trials.size() - 1;
+  sd.t_solver /= trials.size() - 1;
+  sd.p /= trials.size() - 1;
+  sd.r /= trials.size() - 1;
+
+  sd.t_affinity = std::sqrt(sd.t_affinity);
+  sd.t_solver = std::sqrt(sd.t_solver);
+  sd.p = std::sqrt(sd.p);
+  sd.r = std::sqrt(sd.r);
+
+  return sd;
 }
 
 // ----------------------------------------------------------------------------
@@ -249,13 +277,20 @@ int main(int argc, char const *argv[])
       }
 
       // average the trials
-      const Trial trial = average_trial(trials_at_rho_at_m[rho][m]);
+      const Trial avg = average_trial(trials_at_rho_at_m[rho][m]);
+      const Trial sd = stddev_trial(trials_at_rho_at_m[rho][m]);
 
-      table << std::fixed << std::setprecision(3)
+      std::stringstream ss1, ss2;
+      ss1 << std::fixed << std::setprecision(2) << avg.t_affinity*1e3
+          << "  ± " << std::setw(4) << std::setprecision(1) << sd.t_affinity*1e3;
+      ss2 << std::fixed << std::setprecision(2) << avg.t_solver*1e3
+          << "  ± " << std::setw(4) << std::setprecision(1) << sd.t_solver*1e3;
+
+      table << std::fixed << std::setprecision(2)
             << static_cast<int>(rho*100) << m
-            << trial.t_affinity*1e3 << trial.t_solver*1e3
-            << static_cast<int>(trial.p*1e2)
-            << static_cast<int>(trial.r*1e2) << fort::endr;
+            << ss1.str() << ss2.str()
+            << static_cast<int>(avg.p*1e2)
+            << static_cast<int>(avg.r*1e2) << fort::endr;
 
     }
     table << fort::separator;
