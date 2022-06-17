@@ -10,6 +10,10 @@ endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
+if(NOT clipper_FIND_QUIETLY)
+  message(STATUS "CLIPPER v${PROJECT_VERSION}")
+endif()
+
 ###############################################################################
 # Options
 ###############################################################################
