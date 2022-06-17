@@ -13,6 +13,7 @@
 
 #include <Eigen/Dense>
 
+#include "clipper/clipper.h"
 #include "clipper/utils.h"
 
 namespace clipper {
@@ -66,6 +67,17 @@ std::tuple<size_t,size_t> k2ij(size_t k, size_t n)
   const size_t j = n - p;
   return {i-1, j-1};
 }
+
+// ----------------------------------------------------------------------------
+
+Association selectInlierAssociations(const Solution& soln, const Association& A)
+  {
+    Association Ainliers = Association::Zero(soln.nodes.size(), 2);
+    for (size_t i=0; i<soln.nodes.size(); ++i) {
+      Ainliers.row(i) = A.row(soln.nodes[i]);
+    }
+    return Ainliers;
+  }
 
 } // ns utils
 } // ns clipper

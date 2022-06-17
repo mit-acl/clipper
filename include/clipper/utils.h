@@ -17,6 +17,7 @@
 #include "clipper/types.h"
 
 namespace clipper {
+  class Solution;
 namespace utils {
 
   /**
@@ -57,6 +58,16 @@ namespace utils {
     }
     return A;
   }
+
+  /**
+   * @brief      Convenience function to select inlier associations
+   *
+   * @param[in]  soln  The solution of the dense cluster
+   * @param[in]  A     The initial set of associations
+   *
+   * @return     The subset of associations deemed as inliers via solution
+   */
+  Association selectInlierAssociations(const Solution& soln, const Association& A);
 
   /**
  * @brief      Maps a flat index to coordinate of a square symmetric matrix

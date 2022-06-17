@@ -82,7 +82,7 @@ Association CLIPPER::getInitialAssociations()
 
 Association CLIPPER::getSelectedAssociations()
 {
-  return selectInlierAssociations(soln_, A_);
+  return utils::selectInlierAssociations(soln_, A_);
 }
 
 // ----------------------------------------------------------------------------
@@ -105,18 +105,23 @@ Constraint CLIPPER::getConstraintMatrix()
 
 // ----------------------------------------------------------------------------
 
-void CLIPPER::setAffinityMatrix(const Affinity& M)
+void CLIPPER::setMatrixData(const Affinity& M, const Constraint& C)
 {
-  M_ = M.sparseView();
-  M_.diagonal().setZero();
+  Eigen::MatrixXd MM = M.triangularView<Eigen::Upper>();
+  MM.diagonal().setZero();
+  M_ = MM.sparseView();
+
+  Eigen::MatrixXd CC = C.triangularView<Eigen::Upper>();
+  CC.diagonal().setZero();
+  C_ = CC.sparseView();
 }
 
 // ----------------------------------------------------------------------------
 
-void CLIPPER::setConstraintMatrix(const Constraint& C)
+void CLIPPER::setSparseMatrixData(const SpAffinity& M, const SpConstraint& C)
 {
-  C_ = C.sparseView();
-  C_.diagonal().setZero();
+  M_ = M;
+  C_ = C;
 }
 
 // ----------------------------------------------------------------------------
