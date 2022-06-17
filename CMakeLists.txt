@@ -29,6 +29,8 @@ endif()
 # Dependencies
 ###############################################################################
 
+include(FetchContent)
+
 find_package(Eigen3 REQUIRED)
 message(STATUS "Eigen Version: ${EIGEN3_VERSION_STRING} ${EIGEN3_VERSION}")
 
@@ -56,11 +58,11 @@ if(CLIPPER_ENABLE_BLAS)
 endif()
 
 if(CLIPPER_BUILD_BINDINGS_PYTHON)
-  set(PYBIND11_DIR "${CMAKE_CURRENT_BINARY_DIR}/pybind11-download" CACHE INTERNAL "pybind11 build dir" FORCE)
-  configure_file(${CMAKE_MODULE_PATH}/pybind11.cmake.in ${PYBIND11_DIR}/CMakeLists.txt IMMEDIATE @ONLY)
-  execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" . WORKING_DIRECTORY ${PYBIND11_DIR})
-  execute_process(COMMAND "${CMAKE_COMMAND}" --build . WORKING_DIRECTORY ${PYBIND11_DIR})
-  add_subdirectory(${PYBIND11_DIR}/src)
+  FetchContent_Declare(pybind11
+    GIT_REPOSITORY https://github.com/pybind/pybind11
+    GIT_TAG        v2.9.2
+  )
+  FetchContent_MakeAvailable(pybind11)
 endif()
 
 ###############################################################################
