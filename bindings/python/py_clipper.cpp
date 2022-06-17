@@ -103,7 +103,7 @@ void pybind_utils(py::module& m)
 PYBIND11_MODULE(clipperpy, m)
 {
   m.doc() = "A graph-theoretic framework for robust data association";
-  m.attr("__version__") = PROJECT_VERSION;
+  m.attr("__version__") = CLIPPER_VERSION;
 
   py::module m_invariants = m.def_submodule("invariants");
   pybind_invariants(m_invariants);

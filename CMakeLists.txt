@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(clipper VERSION 0.2)
+project(clipper VERSION 0.2.1)
 
 set(CMAKE_CXX_STANDARD 14)
 if(NOT CMAKE_BUILD_TYPE)
@@ -83,7 +83,7 @@ target_include_directories(clipper PUBLIC
 target_compile_options(clipper PUBLIC -march=native -mavx -mfma)
 set_target_properties(clipper PROPERTIES
   VERSION ${PROJECT_VERSION})
-target_compile_definitions(clipper PUBLIC PROJECT_VERSION="${PROJECT_VERSION}")
+target_compile_definitions(clipper PUBLIC CLIPPER_VERSION="${PROJECT_VERSION}")
 
 if(MKL_FOUND)
     target_include_directories(clipper PRIVATE ${MKL_INCLUDE_DIR})
