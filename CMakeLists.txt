@@ -14,14 +14,14 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 # Options
 ###############################################################################
 
-option(BUILD_BINDINGS_PYTHON "Build Python bindings" ON)
-option(BUILD_BINDINGS_MATLAB "Build MATLAB bindings" OFF)
-option(BUILD_TESTS "Build testsuite" OFF)
-option(BUILD_BENCHMARKS "Build benchmarks" OFF)
-option(ENABLE_MKL "Use MKL with Eigen" OFF)
-option(ENABLE_BLAS "Use BLAS with Eigen" OFF) # apt install libopenblas-dev
+option(CLIPPER_BUILD_BINDINGS_PYTHON "Build Python bindings" ON)
+option(CLIPPER_BUILD_BINDINGS_MATLAB "Build MATLAB bindings" OFF)
+option(CLIPPER_BUILD_TESTS "Build testsuite" OFF)
+option(CLIPPER_BUILD_BENCHMARKS "Build benchmarks" OFF)
+option(CLIPPER_ENABLE_MKL "Use MKL with Eigen" OFF)
+option(CLIPPER_ENABLE_BLAS "Use BLAS with Eigen" OFF) # apt install libopenblas-dev
 
-if(ENABLE_MKL AND ENABLE_BLAS)
+if(CLIPPER_ENABLE_MKL AND CLIPPER_ENABLE_BLAS)
   message(FATAL_ERROR "Cannot enable both MKL and BLAS (prefer MKL)")
 endif()
 
@@ -35,7 +35,7 @@ message(STATUS "Eigen Version: ${EIGEN3_VERSION_STRING} ${EIGEN3_VERSION}")
 find_package(OpenMP)
 
 # Give preference to MKL
-if(ENABLE_MKL)
+if(CLIPPER_ENABLE_MKL)
     find_package(MKL)
     if(MKL_FOUND)
         message(STATUS "MKL found at: ${MKL_LIBRARIES}")
@@ -44,7 +44,7 @@ if(ENABLE_MKL)
     endif()
 endif()
 
-if(ENABLE_BLAS)
+if(CLIPPER_ENABLE_BLAS)
     # OpenBLAS is generally better than ATLAS
     set(BLA_VENDOR OpenBLAS)
     find_package(BLAS)
@@ -55,7 +55,7 @@ if(ENABLE_BLAS)
     endif()
 endif()
 
-if(BUILD_BINDINGS_PYTHON)
+if(CLIPPER_BUILD_BINDINGS_PYTHON)
   set(PYBIND11_DIR "${CMAKE_CURRENT_BINARY_DIR}/pybind11-download" CACHE INTERNAL "pybind11 build dir" FORCE)
   configure_file(${CMAKE_MODULE_PATH}/pybind11.cmake.in ${PYBIND11_DIR}/CMakeLists.txt IMMEDIATE @ONLY)
   execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" . WORKING_DIRECTORY ${PYBIND11_DIR})
@@ -96,22 +96,22 @@ endif()
 # Extras
 ###############################################################################
 
-if(BUILD_BINDINGS_PYTHON)
+if(CLIPPER_BUILD_BINDINGS_PYTHON)
     message(STATUS "Building Python bindings.")
     add_subdirectory(bindings/python)
 endif()
 
-if(BUILD_BINDINGS_MATLAB)
+if(CLIPPER_BUILD_BINDINGS_MATLAB)
     message(STATUS "Attempting to build MATLAB bindings.")
     add_subdirectory(bindings/matlab)
 endif()
 
-if(BUILD_TESTS)
+if(CLIPPER_BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)
 endif()
 
-if(BUILD_BENCHMARKS)
+if(CLIPPER_BUILD_BENCHMARKS)
     add_subdirectory(benchmarks)
 endif()
 
