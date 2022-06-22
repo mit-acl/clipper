@@ -71,7 +71,7 @@ namespace clipper {
                                   const invariants::Data& D2,
                                   const Association& A = Association());
 
-    void solve();
+    void solve(const Eigen::VectorXd& u0 = Eigen::VectorXd());
 
     const Solution& getSolution() const { return soln_; }
     Affinity getAffinityMatrix();

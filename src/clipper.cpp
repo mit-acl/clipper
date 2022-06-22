@@ -66,9 +66,15 @@ void CLIPPER::scorePairwiseConsistency(const invariants::Data& D1,
 
 // ----------------------------------------------------------------------------
 
-void CLIPPER::solve()
+void CLIPPER::solve(const Eigen::VectorXd& _u0)
 {
-  findDenseClique(utils::randvec(M_.cols()));
+  Eigen::VectorXd u0;
+  if (_u0.size() == 0) {
+    u0 = utils::randvec(M_.cols());
+  } else {
+    u0 = _u0;
+  }
+  findDenseClique(u0);
 }
 
 // ----------------------------------------------------------------------------
