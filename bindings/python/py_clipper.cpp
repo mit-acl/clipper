@@ -103,7 +103,7 @@ void pybind_utils(py::module& m)
 PYBIND11_MODULE(clipperpy, m)
 {
   m.doc() = "A graph-theoretic framework for robust data association";
-  m.attr("__version__") = PROJECT_VERSION;
+  m.attr("__version__") = CLIPPER_VERSION;
 
   py::module m_invariants = m.def_submodule("invariants");
   pybind_invariants(m_invariants);
@@ -150,7 +150,8 @@ PYBIND11_MODULE(clipperpy, m)
         // GIL-related resoure deadlocking issues for derived classes.
         // See also https://github.com/pybind/pybind11/issues/813.
         // Python extended c++ classes will inherit from PyPairwiseInvariant.
-        clipper->setParallelize(false);
+        bool parallelize = (std::dynamic_pointer_cast<PyPairwiseInvariant<>>(invariant)) ? false : true;
+        clipper->setParallelize(parallelize);
         return clipper;
       }))
     .def("__repr__", [](const clipper::CLIPPER &clipper) {
@@ -160,16 +161,15 @@ PYBIND11_MODULE(clipperpy, m)
     })
     .def("score_pairwise_consistency", &clipper::CLIPPER::scorePairwiseConsistency,
           // py::call_guard<py::gil_scoped_release>(),
-          "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a)
-    .def("solve", &clipper::CLIPPER::solve)
+          "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a.noconvert())
+    .def("solve", &clipper::CLIPPER::solve,
+          "u0"_a.noconvert()=Eigen::VectorXd())
     .def("get_initial_associations", &clipper::CLIPPER::getInitialAssociations)
     .def("get_selected_associations", &clipper::CLIPPER::getSelectedAssociations)
     .def("get_solution", &clipper::CLIPPER::getSolution)
     .def("get_affinity_matrix", &clipper::CLIPPER::getAffinityMatrix)
     .def("get_constraint_matrix", &clipper::CLIPPER::getConstraintMatrix)
-    .def("set_affinity_matrix", &clipper::CLIPPER::setAffinityMatrix,
-          "M"_a.noconvert())
-    .def("set_constraint_matrix", &clipper::CLIPPER::setConstraintMatrix,
-          "C"_a.noconvert())
+    .def("set_matrix_data", &clipper::CLIPPER::setMatrixData,
+          "M"_a.noconvert(), "C"_a.noconvert())
     .def("set_parallelize", &clipper::CLIPPER::setParallelize);
 }

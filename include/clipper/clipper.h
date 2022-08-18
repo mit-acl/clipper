@@ -71,17 +71,36 @@ namespace clipper {
                                   const invariants::Data& D2,
                                   const Association& A = Association());
 
-    void solve();
+    void solve(const Eigen::VectorXd& u0 = Eigen::VectorXd());
 
     const Solution& getSolution() const { return soln_; }
-    Affinity getAffinityMatrix(); // const { return M_; }
-    Constraint getConstraintMatrix(); // const { return C_; }
+    Affinity getAffinityMatrix();
+    Constraint getConstraintMatrix();
 
-    void setAffinityMatrix(const Affinity& M);
-    void setConstraintMatrix(const Constraint& C);
+    /**
+     * @brief      Skip using scorePairwiseConsistency and directly set the
+     *             affinity and constraint matrices. Note that this function
+     *             accepts dense matrices. Use the sparse version for better
+     *             performance if you already have sparse matrices available.
+     *
+     * @param[in]  M     Affinity matrix
+     * @param[in]  C     Constraint matrix
+     */
+    void setMatrixData(const Affinity& M, const Constraint& C);
 
-    Association getInitialAssociations(); // const { return A_; }
-    Association getSelectedAssociations(); // const { return A_; }
+    /**
+     * @brief      Skip using scorePairwiseConsistency and directly set the
+     *             affinity and constraint matrices. Note that this function
+     *             accepts sparse matrices. These matrices should be upper
+     *             triangular and should not have diagonal values set.
+     *
+     * @param[in]  M     Affinity matrix
+     * @param[in]  C     Constraint matrix
+     */
+    void setSparseMatrixData(const SpAffinity& M, const SpConstraint& C);
+
+    Association getInitialAssociations();
+    Association getSelectedAssociations();
 
     void setParallelize(bool parallelize) { parallelize_ = parallelize; };
 
@@ -118,23 +137,6 @@ namespace clipper {
      * @param[in]  C        nxn binary constraint matrix. Active const. are 0.
      */
     void findDenseClique(const Eigen::VectorXd& u0);
-
-    /**
-     * @brief      Convenience function to select inlier associations
-     *
-     * @param[in]  soln  The solution of the dense cluster
-     * @param[in]  A     The initial set of associations
-     *
-     * @return     The subset of associations deemed as inliers via solution
-     */
-    inline Association selectInlierAssociations(const Solution& soln, const Association& A)
-    {
-      Association Ainliers = Association::Zero(soln.nodes.size(), 2);
-      for (size_t i=0; i<soln.nodes.size(); ++i) {
-        Ainliers.row(i) = A.row(soln.nodes[i]);
-      }
-      return Ainliers;
-    }
   };
 
 } // ns clipper
