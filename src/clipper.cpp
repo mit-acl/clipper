@@ -145,28 +145,29 @@ void CLIPPER::findDenseClique(const Eigen::VectorXd& u0)
   const size_t n = M_.cols();
   const Eigen::VectorXd ones = Eigen::VectorXd::Ones(n);
 
+  // initialize memory
+  Eigen::VectorXd gradF(n);
+  Eigen::VectorXd gradFnew(n);
+  Eigen::VectorXd u(n);
+  Eigen::VectorXd unew(n);
+  Eigen::VectorXd Mu(n);
+  Eigen::VectorXd num(n);
+  Eigen::VectorXd den(n);
+
   // one step of power method to have a good scaling of u
-  Eigen::VectorXd u = M_.selfadjointView<Eigen::Upper>() * u0 + u0;
+  u = M_.selfadjointView<Eigen::Upper>() * u0 + u0;
   u /= u.norm();
 
   // initial value of d
   double d = 0; // zero if there are no active constraints
   Eigen::VectorXd Cbu = ones * u.sum() - C_.selfadjointView<Eigen::Upper>() * u - u;
-  const auto idxD = ((Cbu.array()>params_.eps) && (u.array()>params_.eps));
+  const Eigen::VectorXi idxD = ((Cbu.array() > params_.eps) && (u.array() > params_.eps)).cast<int>();
   if (idxD.sum() > 0) {
-    Eigen::VectorXd Mu = M_.selfadjointView<Eigen::Upper>() * u + u;
-    const Eigen::VectorXd num = idxD.select(Mu, std::numeric_limits<double>::infinity());
-    const Eigen::VectorXd den = idxD.select(Cbu, 1);
-    d = (num.array() / den.array()).minCoeff();
+    Mu = M_.selfadjointView<Eigen::Upper>() * u + u;
+    num = utils::selectFromIndicator(Mu, idxD);
+    den = utils::selectFromIndicator(Cbu, idxD);
+    d = (num.array() / den.array()).mean();
   }
-
-  // initialize memory
-  Eigen::VectorXd gradF = Eigen::VectorXd(n);
-  Eigen::VectorXd gradFnew = Eigen::VectorXd(n);
-  Eigen::VectorXd unew = Eigen::VectorXd(n);
-  Eigen::VectorXd Mu = Eigen::VectorXd(n);
-  Eigen::VectorXd num = Eigen::VectorXd(n);
-  Eigen::VectorXd den = Eigen::VectorXd(n);
 
   //
   // Orthogonal projected gradient ascent with homotopy
@@ -215,6 +216,7 @@ void CLIPPER::findDenseClique(const Eigen::VectorXd& u0)
       // update values
       F = Fnew;
       u = unew;
+      gradF = gradFnew;
 
       // check if desired accuracy has been reached by gradient ascent 
       if (deltau < params_.tol_u || std::abs(deltaF) < params_.tol_F) break;
@@ -225,12 +227,12 @@ void CLIPPER::findDenseClique(const Eigen::VectorXd& u0)
     //
 
     Cbu = ones * u.sum() - C_.selfadjointView<Eigen::Upper>() * u - u;
-    const auto idxD = ((Cbu.array() > params_.eps) && (u.array() > params_.eps));
+    const Eigen::VectorXi idxD = ((Cbu.array() > params_.eps) && (u.array() > params_.eps)).cast<int>();
     if (idxD.sum() > 0) {
       Mu = M_.selfadjointView<Eigen::Upper>() * u + u;
-      num = idxD.select(Mu, std::numeric_limits<double>::infinity());
-      den = idxD.select(Cbu, 1);
-      const double deltad = (num.array() / den.array()).abs().minCoeff();
+      num = utils::selectFromIndicator(Mu, idxD);
+      den = utils::selectFromIndicator(Cbu, idxD);
+      const double deltad = (num.array() / den.array()).abs().mean();
 
       d += deltad;
 

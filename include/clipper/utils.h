@@ -60,6 +60,17 @@ namespace utils {
   }
 
   /**
+   * @brief      Select the elements of a vector x given an indicator vector.
+   *
+   * @param[in]  x     Vector to select elements of
+   * @param[in]  ind   The indicator vector
+   *
+   * @return     Vector of selected elements, with size <= x.size
+   */
+  Eigen::VectorXd selectFromIndicator(const Eigen::VectorXd& x,
+                                      const Eigen::VectorXi& ind);
+
+  /**
    * @brief      Convenience function to select inlier associations
    *
    * @param[in]  soln  The solution of the dense cluster

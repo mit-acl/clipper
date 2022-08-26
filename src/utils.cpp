@@ -56,6 +56,21 @@ std::vector<int> findIndicesOfkLargest(const Eigen::VectorXd& x, int k)
 
 // ----------------------------------------------------------------------------
 
+Eigen::VectorXd selectFromIndicator(const Eigen::VectorXd& x,
+                                    const Eigen::VectorXi& ind)
+{
+  Eigen::VectorXd y(ind.sum());
+  size_t idx = 0;
+  for (size_t i=0; i<x.size(); ++i) {
+    if (ind[i]) {
+      y[idx++] = x[i];
+    }
+  }
+  return y;
+}
+
+// ----------------------------------------------------------------------------
+
 std::tuple<size_t,size_t> k2ij(size_t k, size_t n)
 {
   k += 1;
