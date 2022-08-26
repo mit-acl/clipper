@@ -155,7 +155,11 @@ void CLIPPER::findDenseClique(const Eigen::VectorXd& u0)
   Eigen::VectorXd den(n);
 
   // one step of power method to have a good scaling of u
-  u = M_.selfadjointView<Eigen::Upper>() * u0 + u0;
+  if (params_.rescale_u0) {
+    u = M_.selfadjointView<Eigen::Upper>() * u0 + u0;
+  } else {
+    u = u0;
+  }
   u /= u.norm();
 
   // initial value of d
