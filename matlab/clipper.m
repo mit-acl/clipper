@@ -50,9 +50,9 @@ end
 % Stopping criteria
 tolu = 1e-8; % stop when changes of gradient vector or optimization variable between steps
 tolF = 1e-9; % 
-tolFop = 1e-10; % stop grad ascent loop if orthog proj of gradient is nearly zero
+% tolFop = 1e-10; % stop grad ascent loop if orthog proj of gradient is nearly zero
 beta = 0.25;  % for reduction of alpha based on backtracking line search
-maxlsiters = 6; % maximum number of line search iterations
+maxlsiters = 99; % maximum number of line search iterations
 maxiniters = 200; % maximum number of gradient ascent steps for each d
 maxoliters = 1000; % maximum number of outer loop iterations
 epsilon = 1e-9; % numerical threshold to replace 0 with 100x machine epsilon
@@ -85,7 +85,7 @@ Cbu = Cb * u;
 idxD = (Cbu > epsilon) & (u > epsilon); % indices where Cbu>0 and u>0
 if any(idxD)
     Mu = M * u;
-    d = min( Mu(idxD)./Cbu(idxD) ); % smallest d that makes ?u= Mu - d Cbu  hit the positive orthant boundaries (for indices where Cbu>0 and u>0)
+    d = mean( Mu(idxD)./Cbu(idxD) ); % smallest d that makes ?u= Mu - d Cbu  hit the positive orthant boundaries (for indices where Cbu>0 and u>0)
 else
     d = 0; % in this case matrix Cb is all zeros (or there’s no active constraint)
 end
@@ -103,20 +103,23 @@ while outerloop && i<maxoliters
     innerloop = true;
     while innerloop && j<maxiniters
         gradF = Md * u; % gradient
-        gradFop = gradF - gradF.'*u * u;
-        if norm2(gradFop) < tolFop, break; end
-        
-        % Identify an aggressive initial step size based on which elements
-        % the gradient indicates can be penalized (unless already negative)
-        idxA = (gradFop < -epsilon) & (u > epsilon);
-        if any(idxA) % if set is not empty
-            alpha = min(abs( u(idxA)./gradFop(idxA) )); % Find smallest alpha that leads to a step that hits the positive orthant boundaries (for indices where gradF<0 and u>0)
-        else % choose a large alpha (in the limit alpha -> +\infty we get u -> gradF / ||gradF|| in the following loop)
-            alpha = (1/beta)^3 / norm2(gradFop); % (1/beta)^3 = 64, which gives 3 steps of backtracking line search if step is too large before gradu becomes norm 1
-        end
+        gradFop = gradF;
+%         gradFop = gradF - gradF.'*u * u;
+%         if norm2(gradFop) < tolFop, break; end
+%
+%         % Identify an aggressive initial step size based on which elements
+%         % the gradient indicates can be penalized (unless already negative)
+%         idxA = (gradFop < -epsilon) & (u > epsilon);
+%         if any(idxA) % if set is not empty
+%             alpha = min(abs( u(idxA)./gradFop(idxA) )); % Find smallest alpha that leads to a step that hits the positive orthant boundaries (for indices where gradF<0 and u>0)
+%         else % choose a large alpha (in the limit alpha -> +\infty we get u -> gradF / ||gradF|| in the following loop)
+%             alpha = (1/beta)^3 / norm2(gradFop); % (1/beta)^3 = 64, which gives 3 steps of backtracking line search if step is too large before gradu becomes norm 1
+%         end
+
+        alpha = 1;
         
         k = 1;
-        while true %&& k<maxlsiters
+        while true && k<maxlsiters
             unew = u + alpha * gradFop;    % gradient step
             unew = max(unew, 0);           % Projection onto positive orthant
             unew = unew ./ norm2(unew);    % normalize
@@ -149,7 +152,7 @@ while outerloop && i<maxoliters
     idxD = (Cbu > epsilon) & (u > epsilon); % indices where Cbu>0 and u>0
     if any(idxD)
         Mu = M * u;
-        deltad = min(abs( Mu(idxD)./Cbu(idxD) )); % Find smallest deltad that makes gradF=Mu-dCbu  hit the positive orthant boundaries (for indices where Cbu>0 and u>0)
+        deltad = mean(abs( Mu(idxD)./Cbu(idxD) )); % Find smallest deltad that makes gradF=Mu-dCbu  hit the positive orthant boundaries (for indices where Cbu>0 and u>0)
         
         d = d + deltad; % increase d
         Md = M - d * Cb; % update matrix Md

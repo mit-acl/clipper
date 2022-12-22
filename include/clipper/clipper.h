@@ -36,6 +36,11 @@ namespace clipper {
     double eps = 1e-9; ///< numerical threshold around 0
 
     double affinityeps = 1e-4; ///< sparsity-promoting threshold for affinities
+
+    bool rescale_u0 = true; ///< Rescale u0 using one power iteration. This
+                            ///< removes some randomness of the initial guess;
+                            ///< i.e., after one step of power method, random
+                            ///< u0's look similar.
   };
 
   /**

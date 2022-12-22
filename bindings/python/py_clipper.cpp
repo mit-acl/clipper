@@ -125,7 +125,9 @@ PYBIND11_MODULE(clipperpy, m)
     .def_readwrite("maxoliters", &clipper::Params::maxoliters)
     .def_readwrite("beta", &clipper::Params::beta)
     .def_readwrite("maxlsiters", &clipper::Params::maxlsiters)
-    .def_readwrite("eps", &clipper::Params::eps);
+    .def_readwrite("eps", &clipper::Params::eps)
+    .def_readwrite("affinityeps", &clipper::Params::affinityeps)
+    .def_readwrite("rescale_u0", &clipper::Params::rescale_u0);
 
   py::class_<clipper::Solution>(m, "Solution")
     .def(py::init<>())
