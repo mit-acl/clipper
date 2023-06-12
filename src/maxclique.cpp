@@ -138,6 +138,9 @@ std::vector<int> solve(const Eigen::MatrixXd& A, const Params& params)
     }
     if (!params.verbose) std::cout.rdbuf(oldbuf);
   }
+#else
+  std::cout << "Warning: PMC was not built with CLIPPER, "
+               "maximum clique will not be found" << std::endl;
 #endif
 
   return C;

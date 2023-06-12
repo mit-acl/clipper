@@ -111,6 +111,18 @@ PYBIND11_MODULE(clipperpy, m)
   py::module m_utils = m.def_submodule("utils");
   pybind_utils(m_utils);
 
+  py::class_<clipper::maxclique::Params>(m, "MCParams")
+    .def(py::init<>())
+    .def("__repr__", [](const clipper::maxclique::Params &params) {
+      std::ostringstream repr;
+      repr << "<CLIPPER Maximum Clique Parameters>";
+      return repr.str();
+    })
+    .def_readwrite("method", &clipper::maxclique::Params::method)
+    .def_readwrite("threads", &clipper::maxclique::Params::threads)
+    .def_readwrite("time_limit", &clipper::maxclique::Params::time_limit)
+    .def_readwrite("verbose", &clipper::maxclique::Params::verbose);
+
   py::class_<clipper::Params>(m, "Params")
     .def(py::init<>())
     .def("__repr__", [](const clipper::Params &params) {
@@ -166,6 +178,8 @@ PYBIND11_MODULE(clipperpy, m)
           "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a.noconvert())
     .def("solve", &clipper::CLIPPER::solve,
           "u0"_a.noconvert()=Eigen::VectorXd())
+    .def("solve_as_maximum_clique", &clipper::CLIPPER::solveAsMaximumClique,
+          "params"_a=clipper::maxclique::Params{})
     .def("get_initial_associations", &clipper::CLIPPER::getInitialAssociations)
     .def("get_selected_associations", &clipper::CLIPPER::getSelectedAssociations)
     .def("get_solution", &clipper::CLIPPER::getSolution)
