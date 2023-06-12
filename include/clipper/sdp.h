@@ -40,12 +40,12 @@ namespace sdp {
   {
     bool verbose = false;
 
-    int max_iters = 100000;
+    int max_iters = 2000;
     int acceleration_interval = 10;
     int acceleration_lookback = 10;
 
-    float eps_abs = 1e-4;
-    float eps_rel = 1e-4;
+    float eps_abs = 1e-3;
+    float eps_rel = 1e-3;
     float eps_infeas = 1e-7;
 
     float time_limit_secs = 0;
