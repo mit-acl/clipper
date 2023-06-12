@@ -124,6 +124,11 @@ namespace utils {
       total_ = 0;
     }
 
+    double getElapsedSeconds() const
+    {
+      return total_;
+    }
+
   private:
     double total_ = 0;
     std::string name_;
