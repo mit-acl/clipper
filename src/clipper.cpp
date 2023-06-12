@@ -79,6 +79,24 @@ void CLIPPER::solve(const Eigen::VectorXd& _u0)
 
 // ----------------------------------------------------------------------------
 
+void CLIPPER::solveAsMaximumClique(const maxclique::Params& params)
+{
+  Eigen::MatrixXd C = getConstraintMatrix();
+
+  utils::Timer tim;
+  tim.start();
+  std::vector<int> nodes = maxclique::solve(C, params);
+  tim.stop();
+
+  soln_.t = tim.getElapsedSeconds();
+  soln_.ifinal = 0;
+  std::swap(soln_.nodes, nodes);
+  soln_.u = Eigen::VectorXd::Zero(M_.cols());
+  soln_.score = -1;
+}
+
+// ----------------------------------------------------------------------------
+
 Association CLIPPER::getInitialAssociations()
 {
   return A_;

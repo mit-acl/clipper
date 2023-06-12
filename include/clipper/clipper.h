@@ -15,6 +15,8 @@
 #include "clipper/invariants/builtins.h"
 #include "clipper/types.h"
 
+#include "clipper/maxclique.h"
+
 namespace clipper {
 
   /**
@@ -76,7 +78,20 @@ namespace clipper {
                                   const invariants::Data& D2,
                                   const Association& A = Association());
 
+    /**
+     * @brief      Solves the MSRC problem using
+     * graduated projected gradient ascent
+     *
+     * @param[in]  u0    Initial condition, if none provided random vec is used
+     */
     void solve(const Eigen::VectorXd& u0 = Eigen::VectorXd());
+
+    /**
+     * @brief      Solves the maximum clique problem
+     *
+     * @param[in]  params Clique solver parameters
+     */
+    void solveAsMaximumClique(const maxclique::Params& params = {});
 
     const Solution& getSolution() const { return soln_; }
     Affinity getAffinityMatrix();
