@@ -15,6 +15,7 @@
 #include "clipper/invariants/builtins.h"
 #include "clipper/types.h"
 
+#include "clipper/sdp.h"
 #include "clipper/maxclique.h"
 
 namespace clipper {
@@ -92,6 +93,8 @@ namespace clipper {
      * @param[in]  params Clique solver parameters
      */
     void solveAsMaximumClique(const maxclique::Params& params = {});
+
+    void solveAsMSRCSDR(const sdp::Params& params = {});
 
     const Solution& getSolution() const { return soln_; }
     Affinity getAffinityMatrix();
