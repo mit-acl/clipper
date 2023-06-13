@@ -36,10 +36,11 @@ namespace dsd {
  *             paragraph of https://arxiv.org/pdf/1809.04802.pdf.
  *
  * @param[in]  A     Weighted adjacency matrix of graph
+ * @param[in]  S     (Optional) restrict search to subgraph of A
  *
  * @return     Nodes of densest subgraph
  */
-std::vector<int> solve(const Eigen::MatrixXd& A);
+std::vector<int> solve(const Eigen::MatrixXd& A, const std::vector<int>& S = {});
 
 } // ns dsd
 } // ns clipper

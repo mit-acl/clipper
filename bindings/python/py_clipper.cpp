@@ -105,7 +105,7 @@ void pybind_dsd(py::module& m)
   m.doc() = "Exact dense edge-weighted subgraph discovery using Goldberg";
 
   m.def("solve", clipper::dsd::solve,
-    "A"_a,
+    "A"_a.noconvert(), "S"_a=std::vector<int>{},
     "Find densest edge-weighted subgraph of weighted adj mat A.");
 }
 
@@ -153,6 +153,12 @@ PYBIND11_MODULE(clipperpy, m)
     .def_readwrite("eps_infeas", &clipper::sdp::Params::eps_infeas)
     .def_readwrite("time_limit_secs", &clipper::sdp::Params::time_limit_secs);
 
+  py::enum_<clipper::Params::Rounding>(m, "Rounding")
+      .value("NONZERO", clipper::Params::Rounding::NONZERO)
+      .value("DSD", clipper::Params::Rounding::DSD)
+      .value("DSD_HEU", clipper::Params::Rounding::DSD_HEU)
+      .export_values();
+
   py::class_<clipper::Params>(m, "Params")
     .def(py::init<>())
     .def("__repr__", [](const clipper::Params &params) {
@@ -169,7 +175,8 @@ PYBIND11_MODULE(clipperpy, m)
     .def_readwrite("maxlsiters", &clipper::Params::maxlsiters)
     .def_readwrite("eps", &clipper::Params::eps)
     .def_readwrite("affinityeps", &clipper::Params::affinityeps)
-    .def_readwrite("rescale_u0", &clipper::Params::rescale_u0);
+    .def_readwrite("rescale_u0", &clipper::Params::rescale_u0)
+    .def_readwrite("rounding", &clipper::Params::rounding);
 
   py::class_<clipper::Solution>(m, "Solution")
     .def(py::init<>())

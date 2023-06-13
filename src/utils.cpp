@@ -56,6 +56,19 @@ std::vector<int> findIndicesOfkLargest(const Eigen::VectorXd& x, int k)
 
 // ----------------------------------------------------------------------------
 
+std::vector<int> findIndicesWhereAboveThreshold(const Eigen::VectorXd& x,
+                                                double thr)
+{
+  std::vector<int> indices;
+  indices.reserve(x.size());
+  for (size_t i=0; i<x.rows(); ++i) {
+    if (x(i) > thr) indices.push_back(i);
+  }
+  return indices;
+}
+
+// ----------------------------------------------------------------------------
+
 Eigen::VectorXd selectFromIndicator(const Eigen::VectorXd& x,
                                     const Eigen::VectorXi& ind)
 {

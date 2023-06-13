@@ -7,6 +7,7 @@
  */
 
 #include "clipper/dsd.h"
+#include <iostream>
 
 /**
  * This code is due to https://github.com/MengLiuPurdue/find_densest_subgraph
@@ -271,10 +272,20 @@ double densest_subgraph(int64_t n, int64_t m, int64_t *ei, int64_t *ej, double *
 
 // ----------------------------------------------------------------------------
 
-std::vector<int> solve(const Eigen::MatrixXd& A)
+std::vector<int> solve(const Eigen::MatrixXd& A, const std::vector<int>& _S)
 {
-    const int64_t n = A.rows();
-    const int64_t m = n * n - n;
+    // allows the search for densest subgraph in A to be restricted to a
+    // subgraph of A
+    std::vector<int> S;
+    if (_S.size() > 0) {
+        S = _S;
+    } else {
+        S.resize(A.rows());
+        std::iota(S.begin(), S.end(), 0);
+    }
+
+    const int64_t n = A.rows(); // num nodes
+    const int64_t m = S.size() * S.size() - S.size(); // num edges
 
     std::vector<int64_t> ei, ej;
     std::vector<double> w;
@@ -282,8 +293,8 @@ std::vector<int> solve(const Eigen::MatrixXd& A)
     ej.reserve(m);
     w.reserve(m);
 
-    for (size_t i=0; i<n; ++i) {
-        for (size_t j=0; j<n; ++j) {
+    for (const int i : S) {
+        for (const int j : S) {
             // skip diagonals
             if (i == j) continue;
 

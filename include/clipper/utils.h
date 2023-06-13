@@ -40,6 +40,17 @@ namespace utils {
   std::vector<int> findIndicesOfkLargest(const Eigen::VectorXd& x, int k);
 
   /**
+   * @brief      Find indices of vector that are greater than a threshold.
+   *
+   * @param[in]  x     Vector to find elements of
+   * @param[in]  thr   The threshold
+   *
+   * @return     Indices such that x[i] > thr for all i \in indices
+   */
+  std::vector<int> findIndicesWhereAboveThreshold(const Eigen::VectorXd& x,
+                                                  double thr);
+
+  /**
    * @brief      Creates an all-to-all association hypothesis
    *
    * @param[in]  n1    Number of items in view 1
