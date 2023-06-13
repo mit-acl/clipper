@@ -97,6 +97,22 @@ void CLIPPER::solveAsMaximumClique(const maxclique::Params& params)
 
 // ----------------------------------------------------------------------------
 
+void CLIPPER::solveAsMSRCSDR(const sdp::Params& params)
+{
+  Eigen::MatrixXd M = getAffinityMatrix();
+  Eigen::MatrixXd C = getConstraintMatrix();
+
+  sdp::Solution soln = sdp::solve(M, C, params);
+
+  soln_.t = soln.t;
+  soln_.ifinal = 0;
+  std::swap(soln_.nodes, soln.nodes);
+  soln_.u = Eigen::VectorXd::Zero(M_.cols());
+  soln_.score = -1;
+}
+
+// ----------------------------------------------------------------------------
+
 Association CLIPPER::getInitialAssociations()
 {
   return A_;

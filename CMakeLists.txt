@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(clipper VERSION 0.2.2)
+project(clipper VERSION 0.2.3)
 
 set(CMAKE_CXX_STANDARD 14)
 if(NOT CMAKE_BUILD_TYPE)
@@ -78,6 +78,14 @@ if(CLIPPER_ENABLE_MAXCLIQUE)
     FetchContent_MakeAvailable(pmc)
 endif()
 
+if(CLIPPER_ENABLE_SCS_SDR)
+    include(FetchContent)
+    FetchContent_Declare(scs
+        GIT_REPOSITORY  https://github.com/cvxgrp/scs
+        GIT_TAG         3.2.3)
+    FetchContent_MakeAvailable(scs)
+endif()
+
 ###############################################################################
 # Targets
 ###############################################################################
@@ -86,6 +94,7 @@ add_library(clipper SHARED)
 target_sources(clipper PRIVATE
   src/clipper.cpp
   src/utils.cpp
+  src/sdp.cpp
   src/maxclique.cpp
   src/invariants/euclidean_distance.cpp
   src/invariants/pointnormal_distance.cpp)
@@ -111,6 +120,11 @@ endif()
 if(CLIPPER_ENABLE_MAXCLIQUE)
     target_compile_definitions(clipper PUBLIC CLIPPER_HAS_PMC)
     target_link_libraries(clipper PRIVATE pmc)
+endif()
+
+if(CLIPPER_ENABLE_SCS_SDR)
+    target_compile_definitions(clipper PUBLIC CLIPPER_HAS_SCS)
+    target_link_libraries(clipper PRIVATE scs::scsdir)
 endif()
 
 ###############################################################################

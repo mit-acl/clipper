@@ -123,6 +123,22 @@ PYBIND11_MODULE(clipperpy, m)
     .def_readwrite("time_limit", &clipper::maxclique::Params::time_limit)
     .def_readwrite("verbose", &clipper::maxclique::Params::verbose);
 
+  py::class_<clipper::sdp::Params>(m, "SDPParams")
+    .def(py::init<>())
+    .def("__repr__", [](const clipper::sdp::Params &params) {
+      std::ostringstream repr;
+      repr << "<CLIPPER SDP Parameters>";
+      return repr.str();
+    })
+    .def_readwrite("verbose", &clipper::sdp::Params::verbose)
+    .def_readwrite("max_iters", &clipper::sdp::Params::max_iters)
+    .def_readwrite("acceleration_interval", &clipper::sdp::Params::acceleration_interval)
+    .def_readwrite("acceleration_lookback", &clipper::sdp::Params::acceleration_lookback)
+    .def_readwrite("eps_abs", &clipper::sdp::Params::eps_abs)
+    .def_readwrite("eps_rel", &clipper::sdp::Params::eps_rel)
+    .def_readwrite("eps_infeas", &clipper::sdp::Params::eps_infeas)
+    .def_readwrite("time_limit_secs", &clipper::sdp::Params::time_limit_secs);
+
   py::class_<clipper::Params>(m, "Params")
     .def(py::init<>())
     .def("__repr__", [](const clipper::Params &params) {
@@ -180,6 +196,8 @@ PYBIND11_MODULE(clipperpy, m)
           "u0"_a.noconvert()=Eigen::VectorXd())
     .def("solve_as_maximum_clique", &clipper::CLIPPER::solveAsMaximumClique,
           "params"_a=clipper::maxclique::Params{})
+    .def("solve_as_msrc_sdr", &clipper::CLIPPER::solveAsMSRCSDR,
+          "params"_a=clipper::sdp::Params{})
     .def("get_initial_associations", &clipper::CLIPPER::getInitialAssociations)
     .def("get_selected_associations", &clipper::CLIPPER::getSelectedAssociations)
     .def("get_solution", &clipper::CLIPPER::getSolution)
