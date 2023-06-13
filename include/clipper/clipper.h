@@ -15,6 +15,7 @@
 #include "clipper/invariants/builtins.h"
 #include "clipper/types.h"
 
+#include "clipper/dsd.h"
 #include "clipper/sdp.h"
 #include "clipper/maxclique.h"
 

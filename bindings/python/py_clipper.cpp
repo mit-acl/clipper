@@ -100,6 +100,17 @@ void pybind_utils(py::module& m)
 
 // ----------------------------------------------------------------------------
 
+void pybind_dsd(py::module& m)
+{
+  m.doc() = "Exact dense edge-weighted subgraph discovery using Goldberg";
+
+  m.def("solve", clipper::dsd::solve,
+    "A"_a,
+    "Find densest edge-weighted subgraph of weighted adj mat A.");
+}
+
+// ----------------------------------------------------------------------------
+
 PYBIND11_MODULE(clipperpy, m)
 {
   m.doc() = "A graph-theoretic framework for robust data association";
@@ -110,6 +121,9 @@ PYBIND11_MODULE(clipperpy, m)
 
   py::module m_utils = m.def_submodule("utils");
   pybind_utils(m_utils);
+
+  py::module m_dsd = m.def_submodule("dsd");
+  pybind_utils(m_dsd);
 
   py::class_<clipper::maxclique::Params>(m, "MCParams")
     .def(py::init<>())
