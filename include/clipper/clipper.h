@@ -67,6 +67,7 @@ namespace clipper {
     double t; ///< duration spent solving [s]
     int ifinal; ///< number of outer iterations before convergence
     std::vector<int> nodes; ///< indices of graph vertices in dense clique
+    Eigen::VectorXd u0; ///< initial vector used for local solver
     Eigen::VectorXd u; ///< characteristic vector associated with graph
     double score; ///< value of objective function / largest eigenvalue
   };

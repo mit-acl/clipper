@@ -188,6 +188,7 @@ PYBIND11_MODULE(clipperpy, m)
     .def_readwrite("t", &clipper::Solution::t)
     .def_readwrite("ifinal", &clipper::Solution::ifinal)
     .def_readwrite("nodes", &clipper::Solution::nodes)
+    .def_readwrite("u0", &clipper::Solution::u0)
     .def_readwrite("u", &clipper::Solution::u)
     .def_readwrite("score", &clipper::Solution::score);
 

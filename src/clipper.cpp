@@ -317,6 +317,7 @@ void CLIPPER::findDenseClique(const Eigen::VectorXd& u0)
   soln_.t = elapsed;
   soln_.ifinal = i;
   std::swap(soln_.nodes, nodes);
+  soln_.u0 = u0;
   soln_.u.swap(u);
   soln_.score = F;
 }
