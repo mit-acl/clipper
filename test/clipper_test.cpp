@@ -120,7 +120,7 @@ TEST(CLIPPER, EuclideanDistance_UseGetSet) {
   clipper2.setMatrixData(M, C);
 
   // find the densest clique of the previously constructed consistency graph
-  clipper2.solve();
+  clipper2.solveAsMSRCSDR();
 
   // check that the select clique was correct
   clipper::Association Ainliers = clipper::utils::selectInlierAssociations(
@@ -193,7 +193,7 @@ TEST(CLIPPER, EuclideanDistance_UseSparseGetSet) {
   clipper2.setSparseMatrixData(Ms, Cs);
 
   // find the densest clique of the previously constructed consistency graph
-  clipper2.solve();
+  clipper2.solveAsMSRCSDR();
 
   // check that the select clique was correct
   clipper::Association Ainliers = clipper::utils::selectInlierAssociations(

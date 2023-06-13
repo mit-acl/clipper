@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(clipper VERSION 0.2.3)
+project(clipper VERSION 0.2.4)
 
 set(CMAKE_CXX_STANDARD 14)
 if(NOT CMAKE_BUILD_TYPE)
@@ -94,6 +94,7 @@ add_library(clipper SHARED)
 target_sources(clipper PRIVATE
   src/clipper.cpp
   src/utils.cpp
+  src/dsd.cpp
   src/sdp.cpp
   src/maxclique.cpp
   src/invariants/euclidean_distance.cpp

@@ -15,6 +15,7 @@
 #include "clipper/invariants/builtins.h"
 #include "clipper/types.h"
 
+#include "clipper/dsd.h"
 #include "clipper/sdp.h"
 #include "clipper/maxclique.h"
 
@@ -44,6 +45,18 @@ namespace clipper {
                             ///< removes some randomness of the initial guess;
                             ///< i.e., after one step of power method, random
                             ///< u0's look similar.
+
+    // \brief Rounding procedure
+    enum Rounding { NONZERO, DSD, DSD_HEU };
+    // NONZERO - any nonzero elements of u are selected as nodes
+    // DSD - select the densest edge-weighted subgraph of the
+    //       subgraph induced by NONZERO rounding
+    // DSD_HEU - A heuristic for selecting the top best nodes
+    //       of the subgraph induced by NONZERO rounding
+    //       DSD_HEU tends to pick smaller subgraphs than DSD,
+    //       sometimes leading to higher precision at the cost
+    //       of lower recall
+    Rounding rounding = Rounding::DSD_HEU;
   };
 
   /**
