@@ -7,7 +7,6 @@
  */
 
 #include "clipper/dsd.h"
-#include <iostream>
 
 /**
  * This code is due to https://github.com/MengLiuPurdue/find_densest_subgraph
@@ -272,7 +271,7 @@ double densest_subgraph(int64_t n, int64_t m, int64_t *ei, int64_t *ej, double *
 
 // ----------------------------------------------------------------------------
 
-std::vector<int> solve(const Eigen::MatrixXd& A, const std::vector<int>& _S)
+std::vector<int> solve(const SpAffinity& A, const std::vector<int>& _S)
 {
     // allows the search for densest subgraph in A to be restricted to a
     // subgraph of A
@@ -301,7 +300,10 @@ std::vector<int> solve(const Eigen::MatrixXd& A, const std::vector<int>& _S)
             // create a fully connected graph with weights
             ei.push_back(i);
             ej.push_back(j);
-            w.push_back(A(i,j));
+
+            // A is assumed symmetric and that the upper triangle is filled in.
+            const double ew = (i < j) ? A.coeff(i,j) : A.coeff(j,i);
+            w.push_back(ew);
         }
     }
 
@@ -315,6 +317,13 @@ std::vector<int> solve(const Eigen::MatrixXd& A, const std::vector<int>& _S)
         nodes.push_back(output[i]);
     }
     return nodes;
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<int> solve(const Eigen::MatrixXd& A, const std::vector<int>& S)
+{
+    return solve(SpAffinity(A.sparseView()), S);
 }
 
 } // ns dsd

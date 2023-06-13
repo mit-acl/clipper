@@ -15,6 +15,9 @@
 #include <vector>
 
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
+
+#include "clipper/types.h"
 
 namespace clipper {
 namespace dsd {
@@ -35,7 +38,17 @@ namespace dsd {
  *             number of vertices in the subgraph. For example, see second
  *             paragraph of https://arxiv.org/pdf/1809.04802.pdf.
  *
- * @param[in]  A     Weighted adjacency matrix of graph
+ * @param[in]  A     Weighted adjacency matrix of graph. Symmetric upper tri.
+ * @param[in]  S     (Optional) restrict search to subgraph of A
+ *
+ * @return     Nodes of densest subgraph
+ */
+std::vector<int> solve(const SpAffinity& A, const std::vector<int>& S = {});
+
+/**
+ * @brief      Dense specialization of dsd::solve
+ *
+ * @param[in]  A     Dense weighted adjacency matrix of graph
  * @param[in]  S     (Optional) restrict search to subgraph of A
  *
  * @return     Nodes of densest subgraph

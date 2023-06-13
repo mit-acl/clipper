@@ -104,7 +104,9 @@ void pybind_dsd(py::module& m)
 {
   m.doc() = "Exact dense edge-weighted subgraph discovery using Goldberg";
 
-  m.def("solve", clipper::dsd::solve,
+  // TODO(plusk): Support sparse matrices from python
+  m.def("solve", py::overload_cast<const Eigen::MatrixXd&,
+                        const std::vector<int>&>(clipper::dsd::solve),
     "A"_a.noconvert(), "S"_a=std::vector<int>{},
     "Find densest edge-weighted subgraph of weighted adj mat A.");
 }

@@ -297,7 +297,7 @@ void CLIPPER::findDenseClique(const Eigen::VectorXd& u0)
     const std::vector<int> S = utils::findIndicesWhereAboveThreshold(u, 0.0);
 
     // TODO(plusk): make this faster by leveraging matrix sparsity
-    nodes = dsd::solve(getAffinityMatrix(), S);
+    nodes = dsd::solve(M_, S);
 
   } else if (params_.rounding == Params::Rounding::DSD_HEU) {
 
