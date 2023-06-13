@@ -82,6 +82,7 @@ void CLIPPER::solve(const Eigen::VectorXd& _u0)
 void CLIPPER::solveAsMaximumClique(const maxclique::Params& params)
 {
   Eigen::MatrixXd C = getConstraintMatrix();
+  C = C - Eigen::MatrixXd::Identity(C.rows(), C.cols());
 
   utils::Timer tim;
   tim.start();

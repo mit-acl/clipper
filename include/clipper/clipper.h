@@ -107,6 +107,12 @@ namespace clipper {
      */
     void solveAsMaximumClique(const maxclique::Params& params = {});
 
+    /**
+     * @brief      Solves the maximum spectral radius clique problem using
+     *             a semidefinite relaxation.
+     *
+     * @param[in]  params  The parameters
+     */
     void solveAsMSRCSDR(const sdp::Params& params = {});
 
     const Solution& getSolution() const { return soln_; }
