@@ -127,6 +127,12 @@ PYBIND11_MODULE(clipperpy, m)
   py::module m_dsd = m.def_submodule("dsd");
   pybind_utils(m_dsd);
 
+  py::enum_<clipper::maxclique::Method>(m, "MCMethod")
+      .value("EXACT", clipper::maxclique::Method::EXACT)
+      .value("HEU", clipper::maxclique::Method::HEU)
+      .value("KCORE", clipper::maxclique::Method::KCORE)
+      .export_values();
+
   py::class_<clipper::maxclique::Params>(m, "MCParams")
     .def(py::init<>())
     .def("__repr__", [](const clipper::maxclique::Params &params) {
