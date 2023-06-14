@@ -49,6 +49,8 @@ namespace sdp {
     float eps_infeas = 1e-7;
 
     float time_limit_secs = 0;
+
+    bool usedsd = false; ///< use DSD on the msrc
   };
 
   Solution solve(const Eigen::MatrixXd& M, const Eigen::MatrixXd& C,

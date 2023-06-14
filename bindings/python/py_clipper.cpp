@@ -143,7 +143,8 @@ PYBIND11_MODULE(clipperpy, m)
     .def_readwrite("method", &clipper::maxclique::Params::method)
     .def_readwrite("threads", &clipper::maxclique::Params::threads)
     .def_readwrite("time_limit", &clipper::maxclique::Params::time_limit)
-    .def_readwrite("verbose", &clipper::maxclique::Params::verbose);
+    .def_readwrite("verbose", &clipper::maxclique::Params::verbose)
+    .def_readwrite("usedsd", &clipper::maxclique::Params::usedsd);
 
   py::class_<clipper::sdp::Params>(m, "SDPParams")
     .def(py::init<>())
@@ -159,7 +160,33 @@ PYBIND11_MODULE(clipperpy, m)
     .def_readwrite("eps_abs", &clipper::sdp::Params::eps_abs)
     .def_readwrite("eps_rel", &clipper::sdp::Params::eps_rel)
     .def_readwrite("eps_infeas", &clipper::sdp::Params::eps_infeas)
-    .def_readwrite("time_limit_secs", &clipper::sdp::Params::time_limit_secs);
+    .def_readwrite("time_limit_secs", &clipper::sdp::Params::time_limit_secs)
+    .def_readwrite("usedsd", &clipper::sdp::Params::usedsd);
+
+  py::class_<clipper::sdp::Solution>(m, "SDPSolution")
+    .def(py::init<>())
+    .def("__repr__", [](const clipper::sdp::Solution &soln) {
+       std::ostringstream repr;
+       repr << "<CLIPPERSDR solution: pobj = " << soln.pobj << ">";
+       return repr.str();
+    })
+    .def_readwrite("X", &clipper::sdp::Solution::X)
+    .def_readwrite("lambdas", &clipper::sdp::Solution::lambdas)
+    .def_readwrite("evec1", &clipper::sdp::Solution::evec1)
+    .def_readwrite("thr", &clipper::sdp::Solution::thr)
+    .def_readwrite("nodes", &clipper::sdp::Solution::nodes)
+    .def_readwrite("iters", &clipper::sdp::Solution::iters)
+    .def_readwrite("pobj", &clipper::sdp::Solution::pobj)
+    .def_readwrite("dobj", &clipper::sdp::Solution::dobj)
+    .def_readwrite("t", &clipper::sdp::Solution::t)
+    .def_readwrite("t_parse", &clipper::sdp::Solution::t_parse)
+    .def_readwrite("t_scs", &clipper::sdp::Solution::t_scs)
+    .def_readwrite("t_scs_setup", &clipper::sdp::Solution::t_scs_setup)
+    .def_readwrite("t_scs_solve", &clipper::sdp::Solution::t_scs_solve)
+    .def_readwrite("t_scs_linsys", &clipper::sdp::Solution::t_scs_linsys)
+    .def_readwrite("t_scs_cone", &clipper::sdp::Solution::t_scs_cone)
+    .def_readwrite("t_scs_accel", &clipper::sdp::Solution::t_scs_accel)
+    .def_readwrite("t_extract", &clipper::sdp::Solution::t_extract);
 
   py::enum_<clipper::Params::Rounding>(m, "Rounding")
       .value("NONZERO", clipper::Params::Rounding::NONZERO)
@@ -174,7 +201,7 @@ PYBIND11_MODULE(clipperpy, m)
       repr << "<CLIPPER Parameters>";
       return repr.str();
     })
-    .def_readwrite("tol_u", &clipper::Params::tol_u)
+    .def_readwrite("tol_v", &clipper::Params::tol_v)
     .def_readwrite("tol_F", &clipper::Params::tol_F)
     .def_readwrite("tol_Fop", &clipper::Params::tol_Fop)
     .def_readwrite("maxiniters", &clipper::Params::maxiniters)
@@ -183,7 +210,7 @@ PYBIND11_MODULE(clipperpy, m)
     .def_readwrite("maxlsiters", &clipper::Params::maxlsiters)
     .def_readwrite("eps", &clipper::Params::eps)
     .def_readwrite("affinityeps", &clipper::Params::affinityeps)
-    .def_readwrite("rescale_u0", &clipper::Params::rescale_u0)
+    .def_readwrite("rescale_v0", &clipper::Params::rescale_v0)
     .def_readwrite("rounding", &clipper::Params::rounding);
 
   py::class_<clipper::Solution>(m, "Solution")
@@ -193,12 +220,16 @@ PYBIND11_MODULE(clipperpy, m)
       repr << "<CLIPPER Solution>";
       return repr.str();
     })
+    .def_readwrite("t_solve", &clipper::Solution::t_solve)
+    .def_readwrite("t_round", &clipper::Solution::t_round)
     .def_readwrite("t", &clipper::Solution::t)
     .def_readwrite("ifinal", &clipper::Solution::ifinal)
     .def_readwrite("nodes", &clipper::Solution::nodes)
-    .def_readwrite("u0", &clipper::Solution::u0)
+    .def_readwrite("v0", &clipper::Solution::v0)
+    .def_readwrite("v", &clipper::Solution::v)
     .def_readwrite("u", &clipper::Solution::u)
-    .def_readwrite("score", &clipper::Solution::score);
+    .def_readwrite("Fdewc", &clipper::Solution::Fdewc)
+    .def_readwrite("Fmsrc", &clipper::Solution::Fmsrc);
 
   py::class_<clipper::CLIPPER>(m, "CLIPPER")
     .def(py::init(
@@ -223,7 +254,7 @@ PYBIND11_MODULE(clipperpy, m)
           // py::call_guard<py::gil_scoped_release>(),
           "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a.noconvert())
     .def("solve", &clipper::CLIPPER::solve,
-          "u0"_a.noconvert()=Eigen::VectorXd())
+          "v0"_a.noconvert()=Eigen::VectorXd())
     .def("solve_as_maximum_clique", &clipper::CLIPPER::solveAsMaximumClique,
           "params"_a=clipper::maxclique::Params{})
     .def("solve_as_msrc_sdr", &clipper::CLIPPER::solveAsMSRCSDR,
@@ -235,5 +266,6 @@ PYBIND11_MODULE(clipperpy, m)
     .def("get_constraint_matrix", &clipper::CLIPPER::getConstraintMatrix)
     .def("set_matrix_data", &clipper::CLIPPER::setMatrixData,
           "M"_a.noconvert(), "C"_a.noconvert())
-    .def("set_parallelize", &clipper::CLIPPER::setParallelize);
+    .def("set_parallelize", &clipper::CLIPPER::setParallelize)
+    .def("params", &clipper::CLIPPER::params);
 }

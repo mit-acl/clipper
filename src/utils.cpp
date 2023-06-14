@@ -84,6 +84,44 @@ Eigen::VectorXd selectFromIndicator(const Eigen::VectorXd& x,
 
 // ----------------------------------------------------------------------------
 
+Eigen::VectorXd createIndicator(const std::vector<int>& nodes, size_t n)
+{
+  Eigen::VectorXd x = Eigen::VectorXd::Zero(n);
+  for (size_t i=0; i<nodes.size(); i++) {
+    x(nodes[i]) = 1;
+  }
+  return x;
+}
+
+// ----------------------------------------------------------------------------
+
+Eigen::VectorXd projectIndicatorOntoMSRC(const SpAffinity& M_,
+                                          const Eigen::VectorXd& u)
+{
+  std::vector<int> nodes;
+  for (size_t i=0; i<u.size(); i++) {
+    if (u(i) > 0) nodes.push_back(i);
+  }
+
+  // TODO(plusk): this assumes diagonal is identity
+  Eigen::MatrixXd Msub = Eigen::MatrixXd::Identity(nodes.size(), nodes.size());
+
+  // assumes upper triangle of matrix has data
+  for (size_t i=0; i<nodes.size(); i++) {
+    for (size_t j=i+1; j<nodes.size(); j++) {
+      Msub(i,j) = M_.coeff(nodes[i], nodes[j]);
+    }
+  }
+
+  Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver(Msub.transpose());
+  // Eigen::VectorXd eigs = eigensolver.eigenvalues();
+  Eigen::VectorXd v = eigensolver.eigenvectors().col(nodes.size()-1);
+
+  return v;
+}
+
+// ----------------------------------------------------------------------------
+
 std::tuple<size_t,size_t> k2ij(size_t k, size_t n)
 {
   k += 1;

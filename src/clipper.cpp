@@ -66,15 +66,15 @@ void CLIPPER::scorePairwiseConsistency(const invariants::Data& D1,
 
 // ----------------------------------------------------------------------------
 
-void CLIPPER::solve(const Eigen::VectorXd& _u0)
+void CLIPPER::solve(const Eigen::VectorXd& _v0)
 {
-  Eigen::VectorXd u0;
-  if (_u0.size() == 0) {
-    u0 = utils::randvec(M_.cols());
+  Eigen::VectorXd v0;
+  if (_v0.size() == 0) {
+    v0 = utils::randvec(M_.cols());
   } else {
-    u0 = _u0;
+    v0 = _v0;
   }
-  findDenseClique(u0);
+  findDenseClique(v0);
 }
 
 // ----------------------------------------------------------------------------
@@ -84,32 +84,105 @@ void CLIPPER::solveAsMaximumClique(const maxclique::Params& params)
   Eigen::MatrixXd C = getConstraintMatrix();
   C = C - Eigen::MatrixXd::Identity(C.rows(), C.cols());
 
+  //
+  // Solve the Maximum Clique problem
+  //
+
+  std::vector<int> nodes;
+  Eigen::VectorXd u, v;
+  double Fmsrc = 0, t_solve = 0, t_round = 0;
+
   utils::Timer tim;
   tim.start();
-  std::vector<int> nodes = maxclique::solve(C, params);
+  nodes = maxclique::solve(C, params);
   tim.stop();
+  t_solve = tim.getElapsedSeconds();
 
-  soln_.t = tim.getElapsedSeconds();
+  u = utils::createIndicator(nodes, C.rows());
+  v = utils::projectIndicatorOntoMSRC(M_, u);
+  Fmsrc = utils::evalMSRCObj(M_, v);
+
+  //
+  // Solve the densest subgraph problem
+  //
+
+  if (params.usedsd) {
+    utils::Timer tim2;
+    tim2.start();
+    nodes = selectNodesByRounding(v, Fmsrc);
+    tim2.stop();
+    t_round = tim2.getElapsedSeconds();
+
+    u = utils::createIndicator(nodes, C.rows());
+    v = utils::projectIndicatorOntoMSRC(M_, u);
+    Fmsrc = utils::evalMSRCObj(M_, v);
+  }
+
+
+  soln_.t_solve = t_solve;
+  soln_.t_round = t_round;
+  soln_.t = soln_.t_solve + soln_.t_round;
   soln_.ifinal = 0;
+  soln_.Fmsrc = Fmsrc;
+  soln_.Fdewc = utils::evalDEWCObj(M_, u);
   std::swap(soln_.nodes, nodes);
-  soln_.u = Eigen::VectorXd::Zero(M_.cols());
-  soln_.score = -1;
+  soln_.v0 = Eigen::VectorXd::Zero(C.rows());
+  soln_.v.swap(v);
+  soln_.u.swap(u);
 }
 
 // ----------------------------------------------------------------------------
 
-void CLIPPER::solveAsMSRCSDR(const sdp::Params& params)
+sdp::Solution CLIPPER::solveAsMSRCSDR(const sdp::Params& params)
 {
   Eigen::MatrixXd M = getAffinityMatrix();
   Eigen::MatrixXd C = getConstraintMatrix();
 
-  sdp::Solution soln = sdp::solve(M, C, params);
+  //
+  // Solve MSRC to global optimality
+  //
 
-  soln_.t = soln.t;
+  std::vector<int> nodes;
+  Eigen::VectorXd u, v;
+  double Fmsrc = 0, t_solve = 0, t_round = 0;
+
+  sdp::Solution soln = sdp::solve(M, C, params);
+  nodes = soln.nodes;
+  t_solve = soln.t;
+
+  u = utils::createIndicator(nodes, C.rows());
+  v = utils::projectIndicatorOntoMSRC(M_, u);
+  Fmsrc = utils::evalMSRCObj(M_, v);
+
+  //
+  // Solve the densest subgraph problem
+  //
+
+  if (params.usedsd) {
+    utils::Timer tim2;
+    tim2.start();
+    nodes = selectNodesByRounding(v, Fmsrc);
+    tim2.stop();
+    t_round = tim2.getElapsedSeconds();
+
+    u = utils::createIndicator(nodes, C.rows());
+    v = utils::projectIndicatorOntoMSRC(M_, u);
+    Fmsrc = utils::evalMSRCObj(M_, v);
+  }
+
+
+  soln_.t_solve = t_solve;
+  soln_.t_round = t_round;
+  soln_.t = soln_.t_solve + soln_.t_round;
   soln_.ifinal = 0;
-  std::swap(soln_.nodes, soln.nodes);
-  soln_.u = Eigen::VectorXd::Zero(M_.cols());
-  soln_.score = -1;
+  soln_.Fmsrc = Fmsrc;
+  soln_.Fdewc = utils::evalDEWCObj(M_, u);
+  std::swap(soln_.nodes, nodes);
+  soln_.v0 = Eigen::VectorXd::Zero(C.rows());
+  soln_.v.swap(v);
+  soln_.u.swap(u);
+
+  return soln;
 }
 
 // ----------------------------------------------------------------------------
@@ -169,7 +242,7 @@ void CLIPPER::setSparseMatrixData(const SpAffinity& M, const SpConstraint& C)
 // Private Methods
 // ----------------------------------------------------------------------------
 
-void CLIPPER::findDenseClique(const Eigen::VectorXd& u0)
+void CLIPPER::findDenseClique(const Eigen::VectorXd& v0)
 {
   const auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -183,28 +256,28 @@ void CLIPPER::findDenseClique(const Eigen::VectorXd& u0)
   // initialize memory
   Eigen::VectorXd gradF(n);
   Eigen::VectorXd gradFnew(n);
-  Eigen::VectorXd u(n);
-  Eigen::VectorXd unew(n);
-  Eigen::VectorXd Mu(n);
+  Eigen::VectorXd v(n);
+  Eigen::VectorXd vnew(n);
+  Eigen::VectorXd Mv(n);
   Eigen::VectorXd num(n);
   Eigen::VectorXd den(n);
 
-  // one step of power method to have a good scaling of u
-  if (params_.rescale_u0) {
-    u = M_.selfadjointView<Eigen::Upper>() * u0 + u0;
+  // one step of power method to have a good scaling of v
+  if (params_.rescale_v0) {
+    v = M_.selfadjointView<Eigen::Upper>() * v0 + v0;
   } else {
-    u = u0;
+    v = v0;
   }
-  u /= u.norm();
+  v /= v.norm();
 
   // initial value of d
   double d = 0; // zero if there are no active constraints
-  Eigen::VectorXd Cbu = ones * u.sum() - C_.selfadjointView<Eigen::Upper>() * u - u;
-  const Eigen::VectorXi idxD = ((Cbu.array() > params_.eps) && (u.array() > params_.eps)).cast<int>();
+  Eigen::VectorXd Cbv = ones * v.sum() - C_.selfadjointView<Eigen::Upper>() * v - v;
+  const Eigen::VectorXi idxD = ((Cbv.array() > params_.eps) && (v.array() > params_.eps)).cast<int>();
   if (idxD.sum() > 0) {
-    Mu = M_.selfadjointView<Eigen::Upper>() * u + u;
-    num = utils::selectFromIndicator(Mu, idxD);
-    den = utils::selectFromIndicator(Cbu, idxD);
+    Mv = M_.selfadjointView<Eigen::Upper>() * v + v;
+    num = utils::selectFromIndicator(Mv, idxD);
+    den = utils::selectFromIndicator(Cbv, idxD);
     d = (num.array() / den.array()).mean();
   }
 
@@ -216,8 +289,8 @@ void CLIPPER::findDenseClique(const Eigen::VectorXd& u0)
 
   size_t i, j, k; // iteration counters
   for (i=0; i<params_.maxoliters; ++i) {
-    gradF = (1 + d) * u - d * ones * u.sum() + M_.selfadjointView<Eigen::Upper>() * u + C_.selfadjointView<Eigen::Upper>() * u * d;
-    F = u.dot(gradF); // current objective value
+    gradF = (1 + d) * v - d * ones * v.sum() + M_.selfadjointView<Eigen::Upper>() * v + C_.selfadjointView<Eigen::Upper>() * v * d;
+    F = v.dot(gradF); // current objective value
 
     //
     // Orthogonal projected gradient ascent
@@ -232,14 +305,14 @@ void CLIPPER::findDenseClique(const Eigen::VectorXd& u0)
 
       double Fnew = 0, deltaF = 0;
       for (k=0; k<params_.maxlsiters; ++k) {
-        unew = u + alpha * gradF;                     // gradient step
-        unew = unew.cwiseMax(0);                      // project onto positive orthant
-        unew.normalize();                             // project onto S^n
-        gradFnew = (1 + d) * unew // because M/C is missing identity on diagonal
-                    - d * ones * unew.sum()
-                    + M_.selfadjointView<Eigen::Upper>() * unew
-                    + C_.selfadjointView<Eigen::Upper>() * unew * d;
-        Fnew = unew.dot(gradFnew);                    // new objective value after step
+        vnew = v + alpha * gradF;                     // gradient step
+        vnew = vnew.cwiseMax(0);                      // project onto positive orthant
+        vnew.normalize();                             // project onto S^n
+        gradFnew = (1 + d) * vnew // because M/C is missing identity on diagonal
+                    - d * ones * vnew.sum()
+                    + M_.selfadjointView<Eigen::Upper>() * vnew
+                    + C_.selfadjointView<Eigen::Upper>() * vnew * d;
+        Fnew = vnew.dot(gradFnew);                    // new objective value after step
 
         deltaF = Fnew - F;                            // change in objective value
 
@@ -250,27 +323,27 @@ void CLIPPER::findDenseClique(const Eigen::VectorXd& u0)
           break; // obj value increased, stop line search
         }
       }
-      const double deltau = (unew - u).norm();
+      const double deltau = (vnew - v).norm();
 
       // update values
       F = Fnew;
-      u = unew;
+      v = vnew;
       gradF = gradFnew;
 
       // check if desired accuracy has been reached by gradient ascent 
-      if (deltau < params_.tol_u || std::abs(deltaF) < params_.tol_F) break;
+      if (deltau < params_.tol_v || std::abs(deltaF) < params_.tol_F) break;
     }
 
     //
     // Increase d
     //
 
-    Cbu = ones * u.sum() - C_.selfadjointView<Eigen::Upper>() * u - u;
-    const Eigen::VectorXi idxD = ((Cbu.array() > params_.eps) && (u.array() > params_.eps)).cast<int>();
+    Cbv = ones * v.sum() - C_.selfadjointView<Eigen::Upper>() * v - v;
+    const Eigen::VectorXi idxD = ((Cbv.array() > params_.eps) && (v.array() > params_.eps)).cast<int>();
     if (idxD.sum() > 0) {
-      Mu = M_.selfadjointView<Eigen::Upper>() * u + u;
-      num = utils::selectFromIndicator(Mu, idxD);
-      den = utils::selectFromIndicator(Cbu, idxD);
+      Mv = M_.selfadjointView<Eigen::Upper>() * v + v;
+      num = utils::selectFromIndicator(Mv, idxD);
+      den = utils::selectFromIndicator(Cbv, idxD);
       const double deltad = (num.array() / den.array()).abs().mean();
 
       d += deltad;
@@ -280,21 +353,55 @@ void CLIPPER::findDenseClique(const Eigen::VectorXd& u0)
     }
   }
 
+  const auto t2 = std::chrono::high_resolution_clock::now();
+  const auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
+  const double t_solve = static_cast<double>(duration.count()) / 1e9;
+
   //
-  // Generate output
+  // Round v to binary vector
   //
 
-  // node indices of rounded u vector
+  // select nodes based on rounding the v vector to binary u
+  const auto t3 = std::chrono::high_resolution_clock::now();
+  std::vector<int> nodes = selectNodesByRounding(v, F);
+  const auto t4 = std::chrono::high_resolution_clock::now();
+  const auto duration2 = std::chrono::duration_cast<std::chrono::nanoseconds>(t4 - t3);
+  const double t_round = static_cast<double>(duration2.count()) / 1e9;
+
+  // create indicator vector u from selected node indices
+  Eigen::VectorXd u = utils::createIndicator(nodes, v.rows());
+
+  //
+  // Bookkeeping
+  //
+
+  soln_.t_solve = t_solve;
+  soln_.t_round = t_round;
+  soln_.t = soln_.t_solve + soln_.t_round;
+  soln_.ifinal = i;
+  soln_.Fmsrc = utils::evalMSRCObj(M_, v); // should be same as F
+  soln_.Fdewc = utils::evalDEWCObj(M_, u);
+  std::swap(soln_.nodes, nodes);
+  soln_.v0 = v0;
+  soln_.v.swap(v);
+  soln_.u.swap(u);
+}
+
+// ----------------------------------------------------------------------------
+
+std::vector<int> CLIPPER::selectNodesByRounding(const Eigen::VectorXd& v, double F)
+{
+  // node indices of rounded v vector
   std::vector<int> nodes;
 
   if (params_.rounding == Params::Rounding::NONZERO) {
 
-    nodes = utils::findIndicesWhereAboveThreshold(u, 0.0);
+    nodes = utils::findIndicesWhereAboveThreshold(v, 0.0);
 
   } else if (params_.rounding == Params::Rounding::DSD) {
 
-    // subgraph induced by non-zero elements of u
-    const std::vector<int> S = utils::findIndicesWhereAboveThreshold(u, 0.0);
+    // subgraph induced by non-zero elements of v
+    const std::vector<int> S = utils::findIndicesWhereAboveThreshold(v, 0.0);
 
     // TODO(plusk): make this faster by leveraging matrix sparsity
     nodes = dsd::solve(M_, S);
@@ -305,21 +412,11 @@ void CLIPPER::findDenseClique(const Eigen::VectorXd& u0)
     const int omega = std::round(F);
 
     // extract indices of nodes in identified dense cluster
-    nodes = utils::findIndicesOfkLargest(u, omega);
+    nodes = utils::findIndicesOfkLargest(v, omega);
 
   }
 
-  const auto t2 = std::chrono::high_resolution_clock::now();
-  const auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
-  const double elapsed = static_cast<double>(duration.count()) / 1e9;
-
-  // set solution
-  soln_.t = elapsed;
-  soln_.ifinal = i;
-  std::swap(soln_.nodes, nodes);
-  soln_.u0 = u0;
-  soln_.u.swap(u);
-  soln_.score = F;
+  return nodes;
 }
 
 } // ns clipper

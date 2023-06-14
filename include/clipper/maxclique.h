@@ -20,6 +20,7 @@ struct Params
   size_t threads = 24; ///< num threads for OpenMP to use
   int time_limit = 3600; ///< [s], maximum time allotted for MCP solving
   bool verbose = false;
+  bool usedsd = false; ///< use DSD on maximum clique
 };
 
 std::vector<int> solve(const Eigen::MatrixXd& A, const Params& params = {});

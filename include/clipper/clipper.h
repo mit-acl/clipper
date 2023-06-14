@@ -27,7 +27,7 @@ namespace clipper {
   struct Params {
 
     // \brief Basic gradient descent stopping criteria
-    double tol_u = 1e-8; ///< stop when change in u < tol
+    double tol_v = 1e-8; ///< stop when change in v < tol
     double tol_F = 1e-9; ///< stop when change in F < tol
     double tol_Fop = 1e-10; ///< stop when ||dFop|| < tol
     int maxiniters = 200; ///< max num of gradient ascent steps for each d
@@ -41,10 +41,10 @@ namespace clipper {
 
     double affinityeps = 1e-4; ///< sparsity-promoting threshold for affinities
 
-    bool rescale_u0 = true; ///< Rescale u0 using one power iteration. This
+    bool rescale_v0 = true; ///< Rescale v0 using one power iteration. This
                             ///< removes some randomness of the initial guess;
                             ///< i.e., after one step of power method, random
-                            ///< u0's look similar.
+                            ///< v0's look similar.
 
     // \brief Rounding procedure
     enum Rounding { NONZERO, DSD, DSD_HEU };
@@ -64,12 +64,17 @@ namespace clipper {
    */
   struct Solution
   {
-    double t; ///< duration spent solving [s]
+    double t_solve; ///< duration spent solving [s]
+    double t_round; ///< duration spent rounding solution to binary [s]
+    double t; ///< total duration spent [s]
     int ifinal; ///< number of outer iterations before convergence
     std::vector<int> nodes; ///< indices of graph vertices in dense clique
-    Eigen::VectorXd u0; ///< initial vector used for local solver
-    Eigen::VectorXd u; ///< characteristic vector associated with graph
-    double score; ///< value of objective function / largest eigenvalue
+    Eigen::VectorXd v0; ///< initial vector used for local solver
+    Eigen::VectorXd v; ///< characteristic vector associated with graph
+    Eigen::VectorXd u; ///< indicator vector, rounded from v
+    double Fdewc; ///< DEWC objective value (using feasible indicator vector)
+                  ///< Note that this is the same objective as DSD
+    double Fmsrc; ///< MSRC objective value / largest eigenvalue
   };
 
   /**
@@ -97,9 +102,9 @@ namespace clipper {
      * @brief      Solves the MSRC problem using
      * graduated projected gradient ascent
      *
-     * @param[in]  u0    Initial condition, if none provided random vec is used
+     * @param[in]  v0    Initial condition, if none provided random vec is used
      */
-    void solve(const Eigen::VectorXd& u0 = Eigen::VectorXd());
+    void solve(const Eigen::VectorXd& v0 = Eigen::VectorXd());
 
     /**
      * @brief      Solves the maximum clique problem
@@ -114,7 +119,7 @@ namespace clipper {
      *
      * @param[in]  params  The parameters
      */
-    void solveAsMSRCSDR(const sdp::Params& params = {});
+    sdp::Solution solveAsMSRCSDR(const sdp::Params& params = {});
 
     const Solution& getSolution() const { return soln_; }
     Affinity getAffinityMatrix();
@@ -146,6 +151,8 @@ namespace clipper {
     Association getSelectedAssociations();
 
     void setParallelize(bool parallelize) { parallelize_ = parallelize; };
+
+    Params& params() { return params_; }
 
   private:
     Params params_;
@@ -179,7 +186,17 @@ namespace clipper {
      *                      set the diagonal of M to identity.
      * @param[in]  C        nxn binary constraint matrix. Active const. are 0.
      */
-    void findDenseClique(const Eigen::VectorXd& u0);
+    void findDenseClique(const Eigen::VectorXd& v0);
+
+    /**
+     * @brief      Rounds the continuous vector v to an indicator u
+     *
+     * @param[in]  v     Continuous vector as the output of the continuous relaxation
+     * @param[in]  F     Objective value of MSRC
+     *
+     * @return     Selected nodes
+     */
+    std::vector<int> selectNodesByRounding(const Eigen::VectorXd& v, double F);
   };
 
 } // ns clipper

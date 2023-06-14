@@ -82,6 +82,31 @@ namespace utils {
                                       const Eigen::VectorXi& ind);
 
   /**
+   * @brief      Creates an indicator vector of length n.
+   *
+   * @param[in]  nodes  The indices to set to 1
+   * @param[in]  n      The length of the indicator vector
+   *
+   * @return     A binary indicator vector, v[nodes] == 1, v[~nodes] == 0
+   */
+  Eigen::VectorXd createIndicator(const std::vector<int>& nodes, size_t n);
+
+  /**
+   * @brief      Projects an indicator vector onto the MSRC constraint space.
+   *
+   *             The resulting vector v *should* be a feasible stationary
+   *             point of the MSRC problem, but tbh I haven't analytically
+   *             confirmed this. Numerically it holds on examples.
+   *
+   * @param[in]  M_    Affinity matrix (assuming identity diagonal)
+   * @param[in]  u     Binary indicator vector
+   *
+   * @return     Continuous vector, v
+   */
+  Eigen::VectorXd projectIndicatorOntoMSRC(const SpAffinity& M_,
+                                            const Eigen::VectorXd& u);
+
+  /**
    * @brief      Convenience function to select inlier associations
    *
    * @param[in]  soln  The solution of the dense cluster
@@ -100,6 +125,45 @@ namespace utils {
  * @return     row, col of a matrix corresponding to flat index k
  */
   std::tuple<size_t,size_t> k2ij(size_t k, size_t n);
+
+  /**
+   * @brief      Evaluate the densest subgraph discovery (DSD) objective
+   *
+   * @param[in]  M     Affinity matrix (assuming identity diagonal)
+   * @param[in]  u     Binary indicator vector
+   *
+   * @return     u' * M * u / (u'* u)   where u is binary
+   */
+  inline double evalDSDObj(const SpAffinity& M, const Eigen::VectorXd& u)
+  {
+    return u.dot(M.selfadjointView<Eigen::Upper>() * u + u) / u.dot(u);
+  }
+
+  /**
+   * @brief      Evaluate the densest edge-weighted clique (DEWC) objective
+   *
+   * @param[in]  M     Affinity matrix (assuming identity diagonal)
+   * @param[in]  u     Binary indicator vector
+   *
+   * @return     u' * M * u / (u'* u)   where u is binary
+   */
+  inline double evalDEWCObj(const SpAffinity& M, const Eigen::VectorXd& u)
+  {
+    return evalDSDObj(M, u);
+  }
+
+  /**
+   * @brief      Evaluate the maximum spectral radius clique (MSRC) objective
+   *
+   * @param[in]  M     Affinity matrix (assuming identity diagonal)
+   * @param[in]  v     Decision variable from continuous relaxation
+   *
+   * @return     u' * M * u   where u is in positive orthant and ||u||^2<=1
+   */
+  inline double evalMSRCObj(const SpAffinity& M, const Eigen::VectorXd& v)
+  {
+    return v.dot(M.selfadjointView<Eigen::Upper>() * v + v);
+  }
 
   /**
    * @brief      Simple named profiling timer
