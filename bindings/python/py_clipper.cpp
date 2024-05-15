@@ -70,12 +70,14 @@ void pybind_invariants(py::module& m)
       std::ostringstream repr;
       repr << "<VolumeEuclideanDistanceParams : sigma=" << params.sigma;
       repr << " epsilon=" << params.epsilon;
-      repr << " mindist=" << params.mindist << ">";
+      repr << " mindist=" << params.mindist;
+      repr << " epsilon_volume=" << params.epsilon_volume << ">";
       return repr.str();
     })
     .def_readwrite("sigma", &clipper::invariants::VolumeEuclideanDistance::Params::sigma)
     .def_readwrite("epsilon", &clipper::invariants::VolumeEuclideanDistance::Params::epsilon)
-    .def_readwrite("mindist", &clipper::invariants::VolumeEuclideanDistance::Params::mindist);
+    .def_readwrite("mindist", &clipper::invariants::VolumeEuclideanDistance::Params::mindist)
+    .def_readwrite("epsilon_volume", &clipper::invariants::VolumeEuclideanDistance::Params::epsilon_volume);
 
   py::class_<VolumeEuclideanDistance, PairwiseInvariant, PyPairwiseInvariant<VolumeEuclideanDistance>, std::shared_ptr<VolumeEuclideanDistance>>(m, "VolumeEuclideanDistance")
     .def(py::init<const VolumeEuclideanDistance::Params&>());
@@ -90,12 +92,14 @@ void pybind_invariants(py::module& m)
       std::ostringstream repr;
       repr << "<VolumeGravityConstrainedDistanceParams : sigma=" << params.sigma;
       repr << " epsilon=" << params.epsilon;
-      repr << " mindist=" << params.mindist << ">";
+      repr << " mindist=" << params.mindist;
+      repr << " epsilon_volume=" << params.epsilon_volume << ">";
       return repr.str();
     })
     .def_readwrite("sigma", &clipper::invariants::VolumeGravityConstrainedDistance::Params::sigma)
     .def_readwrite("epsilon", &clipper::invariants::VolumeGravityConstrainedDistance::Params::epsilon)
-    .def_readwrite("mindist", &clipper::invariants::VolumeGravityConstrainedDistance::Params::mindist);
+    .def_readwrite("mindist", &clipper::invariants::VolumeGravityConstrainedDistance::Params::mindist)
+    .def_readwrite("epsilon_volume", &clipper::invariants::VolumeGravityConstrainedDistance::Params::epsilon_volume);
 
   py::class_<VolumeGravityConstrainedDistance, PairwiseInvariant, PyPairwiseInvariant<VolumeGravityConstrainedDistance>, std::shared_ptr<VolumeGravityConstrainedDistance>>(m, "VolumeGravityConstrainedDistance")
     .def(py::init<const VolumeGravityConstrainedDistance::Params&>());

@@ -32,7 +32,8 @@ double VolumeEuclideanDistance::operator()(const Datum& ai, const Datum& aj,
   // consistency score
   const double c = std::abs(l1 - l2);
 
-  return (c<params_.epsilon) ? std::exp(-0.5*c*c/(params_.sigma*params_.sigma)) * volume_score_i * volume_score_j : 0;
+  return (c<params_.epsilon && volume_score_i>params_.epsilon_volume && volume_score_j>params_.epsilon_volume) ? 
+    std::pow(std::exp(-0.5*c*c/(params_.sigma*params_.sigma)) * volume_score_i * volume_score_j, 1/3) : 0;
 }
 
 } // ns invariants
