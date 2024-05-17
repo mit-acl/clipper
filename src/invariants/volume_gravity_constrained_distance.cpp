@@ -35,7 +35,7 @@ double VolumeGravityConstrainedDistance::operator()(const Datum& ai, const Datum
   return (c_xy<params_.epsilon && c_z<params_.epsilon && 
     volume_score_i>params_.epsilon_volume && volume_score_j>params_.epsilon_volume) ? 
     std::pow(std::exp(-0.5*c_xy*c_xy/(params_.sigma*params_.sigma) + -0.5*c_z*c_z/(params_.sigma*params_.sigma)) 
-    * volume_score_i * volume_score_j, 1/3) : 0;
+    * volume_score_i * volume_score_j, 1.0/3.0) : 0;
 }
 
 } // ns invariants
