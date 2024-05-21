@@ -105,6 +105,34 @@ void pybind_invariants(py::module& m)
     .def(py::init<const VolumeGravityConstrainedDistance::Params&>());
 
   //
+  // Distance Feature Similarity
+  //
+
+  py::class_<DistanceFeatureSimilarity::Params>(m, "DistanceFeatureSimilarityParams")
+    .def(py::init<>())
+    .def("__repr__", [](const DistanceFeatureSimilarity::Params &params) {
+      std::ostringstream repr;
+      repr << "<DistanceFeatureSimilarityParams : point_dim=" << params.point_dim;
+      repr << " feature_dim=" << params.feature_dim;
+      repr << " sigma=" << params.sigma;
+      repr << " epsilon=" << params.epsilon;
+      repr << " mindist=" << params.mindist;
+      repr << " feature_epsilon=" << params.feature_epsilon;
+      repr << " gravity_guided=" << params.gravity_guided << ">";
+      return repr.str();
+    })
+    .def_readwrite("point_dim", &clipper::invariants::DistanceFeatureSimilarity::Params::point_dim)
+    .def_readwrite("feature_dim", &clipper::invariants::DistanceFeatureSimilarity::Params::feature_dim)
+    .def_readwrite("sigma", &clipper::invariants::DistanceFeatureSimilarity::Params::sigma)
+    .def_readwrite("epsilon", &clipper::invariants::DistanceFeatureSimilarity::Params::epsilon)
+    .def_readwrite("mindist", &clipper::invariants::DistanceFeatureSimilarity::Params::mindist)
+    .def_readwrite("feature_epsilon", &clipper::invariants::DistanceFeatureSimilarity::Params::feature_epsilon)
+    .def_readwrite("gravity_guided", &clipper::invariants::DistanceFeatureSimilarity::Params::gravity_guided);
+
+  py::class_<DistanceFeatureSimilarity, PairwiseInvariant, PyPairwiseInvariant<DistanceFeatureSimilarity>, std::shared_ptr<DistanceFeatureSimilarity>>(m, "DistanceFeatureSimilarity")
+    .def(py::init<const DistanceFeatureSimilarity::Params&>());
+
+  //
   // Euclidean Distance
   //
 

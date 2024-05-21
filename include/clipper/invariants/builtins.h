@@ -12,3 +12,4 @@
 #include "clipper/invariants/gravity_constrained_distance.h"
 #include "clipper/invariants/volume_euclidean_distance.h"
 #include "clipper/invariants/volume_gravity_constrained_distance.h"
+#include "clipper/invariants/distance_feature_similarity.h"
