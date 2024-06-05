@@ -107,6 +107,14 @@ void pybind_invariants(py::module& m)
   //
   // Distance Feature Similarity
   //
+  py::class_<DistanceFeatureSimilarity, PairwiseInvariant, PyPairwiseInvariant<DistanceFeatureSimilarity>, std::shared_ptr<DistanceFeatureSimilarity>> distfeatsim(m, "DistanceFeatureSimilarity");
+  distfeatsim.def(py::init<const DistanceFeatureSimilarity::Params&>());
+
+  py::enum_<DistanceFeatureSimilarity::SimilarityFusionMethod>(distfeatsim, "SimilarityFusionMethod")
+    .value("GEOMETRIC_MEAN", DistanceFeatureSimilarity::SimilarityFusionMethod::GEOMETRIC_MEAN)
+    .value("ARITHMETIC_MEAN", DistanceFeatureSimilarity::SimilarityFusionMethod::ARITHMETIC_MEAN)
+    .value("PRODUCT", DistanceFeatureSimilarity::SimilarityFusionMethod::PRODUCT)
+    .export_values();
 
   py::class_<DistanceFeatureSimilarity::Params>(m, "DistanceFeatureSimilarityParams")
     .def(py::init<>())
@@ -118,7 +126,9 @@ void pybind_invariants(py::module& m)
       repr << " epsilon=" << params.epsilon;
       repr << " mindist=" << params.mindist;
       repr << " feature_epsilon=" << params.feature_epsilon;
-      repr << " gravity_guided=" << params.gravity_guided << ">";
+      repr << " gravity_guided=" << params.gravity_guided;
+      repr << " similarity_fusion_method=" << params.similarity_fusion_method;
+      repr << " distance_fusion_weight=" << params.distance_fusion_weight << ">";
       return repr.str();
     })
     .def_readwrite("point_dim", &clipper::invariants::DistanceFeatureSimilarity::Params::point_dim)
@@ -127,10 +137,9 @@ void pybind_invariants(py::module& m)
     .def_readwrite("epsilon", &clipper::invariants::DistanceFeatureSimilarity::Params::epsilon)
     .def_readwrite("mindist", &clipper::invariants::DistanceFeatureSimilarity::Params::mindist)
     .def_readwrite("feature_epsilon", &clipper::invariants::DistanceFeatureSimilarity::Params::feature_epsilon)
-    .def_readwrite("gravity_guided", &clipper::invariants::DistanceFeatureSimilarity::Params::gravity_guided);
-
-  py::class_<DistanceFeatureSimilarity, PairwiseInvariant, PyPairwiseInvariant<DistanceFeatureSimilarity>, std::shared_ptr<DistanceFeatureSimilarity>>(m, "DistanceFeatureSimilarity")
-    .def(py::init<const DistanceFeatureSimilarity::Params&>());
+    .def_readwrite("gravity_guided", &clipper::invariants::DistanceFeatureSimilarity::Params::gravity_guided)
+    .def_readwrite("similarity_fusion_method", &clipper::invariants::DistanceFeatureSimilarity::Params::similarity_fusion_method)
+    .def_readwrite("distance_fusion_weight", &clipper::invariants::DistanceFeatureSimilarity::Params::distance_fusion_weight);
 
   //
   // Euclidean Distance

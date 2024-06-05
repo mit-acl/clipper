@@ -75,7 +75,30 @@ double DistanceFeatureSimilarity::operator()(const Datum& ai, const Datum& aj,
     distance_score = std::exp(-0.5*c*c/(params_.sigma*params_.sigma));
   }
 
-  return params_.feature_dim > 0 ? std::pow(distance_score * feature_score_i.prod() * feature_score_j.prod(), 1.0/(1.0+2.0*params_.feature_dim)) : distance_score;
+  double fused_score = 0;
+  if (params_.feature_dim > 0) {
+    switch (params_.similarity_fusion_method) {
+      case SimilarityFusionMethod::GEOMETRIC_MEAN: {
+        double dist_score_pow = std::pow(distance_score, params_.distance_fusion_weight);
+        fused_score = std::pow(dist_score_pow * feature_score_i.prod() * feature_score_j.prod(), 1.0/(params_.distance_fusion_weight + 2.0*params_.feature_dim));
+        break;
+      }
+      case SimilarityFusionMethod::ARITHMETIC_MEAN: {
+        fused_score = (params_.distance_fusion_weight * distance_score + feature_score_i.sum() + feature_score_j.sum()) / (params_.distance_fusion_weight + 2.0*params_.feature_dim);
+        break;
+      }
+      case SimilarityFusionMethod::PRODUCT: {
+        fused_score = distance_score * feature_score_i.prod() * feature_score_j.prod();
+        break;
+      }
+      default: {
+        // Should not reach here!
+        break;
+      }
+    }
+  }
+
+  return params_.feature_dim > 0 ? fused_score : distance_score;
 }
 
 } // ns invariants

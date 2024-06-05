@@ -19,6 +19,11 @@ namespace invariants {
   class DistanceFeatureSimilarity : public PairwiseInvariant
   {
   public:
+    enum SimilarityFusionMethod {
+      GEOMETRIC_MEAN,
+      ARITHMETIC_MEAN,
+      PRODUCT
+    };
     struct Params
     {
       uint8_t point_dim = 3; ///< dimension of points (2 or 3)
@@ -28,6 +33,8 @@ namespace invariants {
       double mindist = 0; ///< minimum allowable distance between inlier points in the same dataset
       Eigen::VectorXd feature_epsilon =  Eigen::VectorXd::Zero(feature_dim); ///< bound on feature consistency score, determines if inlier/outlier
       bool gravity_guided = false; ///< whether to use gravity-guided prior
+      SimilarityFusionMethod similarity_fusion_method = SimilarityFusionMethod::GEOMETRIC_MEAN; ///< which method to use to fuse distance and feature similarities
+      double distance_fusion_weight = 1.0;
     };
   public:
     DistanceFeatureSimilarity(const Params& params)
