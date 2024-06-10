@@ -37,8 +37,11 @@ double DistanceFeatureSimilarity::operator()(const Datum& ai, const Datum& aj,
     feature_score_j(i) = aj(params_.point_dim + i) < bj(params_.point_dim + i) ? 
       aj(params_.point_dim + i) / bj(params_.point_dim + i) : 
       bj(params_.point_dim + i) / aj(params_.point_dim + i);
+    // if any feature score is below the epsilon threshold, return 0
+    // TODO: below needs to be uncommented to proper arithmetic mean fusion
+    // feature_score_i(i) = feature_score_i(i) < params_.feature_epsilon(i) ? 0.0 : feature_score_i(i);
+    // feature_score_j(i) = feature_score_j(i) < params_.feature_epsilon(i) ? 0.0 : feature_score_j(i);
   }
-  // if any feature score is below the epsilon threshold, return 0
   if ((feature_score_i.array() < params_.feature_epsilon.array()).any() || 
       (feature_score_j.array() < params_.feature_epsilon.array()).any()) {
     return 0.0;
@@ -59,23 +62,30 @@ double DistanceFeatureSimilarity::operator()(const Datum& ai, const Datum& aj,
     const double c_z = std::abs(z_diff1 - z_diff2);
 
     if (c_xy > SQRT_TWO_THIRDS*params_.epsilon || c_z > SQRT_ONE_THIRD*params_.epsilon) {
-      return 0.0;
+      if (params_.similarity_fusion_method == SimilarityFusionMethod::GEOMETRIC_MEAN || 
+          params_.similarity_fusion_method == SimilarityFusionMethod::PRODUCT)
+        return 0.0;
+      distance_score = 0.0;
+    } else {
+      distance_score = std::exp(-0.5*(c_xy*c_xy/(2.0/3.0*params_.sigma*params_.sigma) + 
+          c_z*c_z/(params_.sigma*params_.sigma/3.0)));
     }
-
-    distance_score = std::exp(-0.5*(c_xy*c_xy/(2.0/3.0*params_.sigma*params_.sigma) + 
-        c_z*c_z/(params_.sigma*params_.sigma/3.0)));
 
   } else {
     // standard distance similarity
     const double c = std::abs(l1 - l2);
     if (c > params_.epsilon) {
-      return 0.0;
+      if (params_.similarity_fusion_method == SimilarityFusionMethod::GEOMETRIC_MEAN || 
+          params_.similarity_fusion_method == SimilarityFusionMethod::PRODUCT)
+        return 0.0;
+      distance_score = 0.0;
+    } else {
+      distance_score = std::exp(-0.5*c*c/(params_.sigma*params_.sigma));
     }
 
-    distance_score = std::exp(-0.5*c*c/(params_.sigma*params_.sigma));
   }
 
-  double fused_score = 0;
+  double fused_score = 0.0;
   if (params_.feature_dim > 0) {
     switch (params_.similarity_fusion_method) {
       case SimilarityFusionMethod::GEOMETRIC_MEAN: {
