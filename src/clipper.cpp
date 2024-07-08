@@ -16,6 +16,14 @@ CLIPPER::CLIPPER(const invariants::PairwiseInvariantPtr& invariant, const Params
 : invariant_(invariant), params_(params)
 {}
 
+// CLIPPERPairwiseAndSingle::CLIPPERPairwiseAndSingle(
+//   const invariants::PairwiseAndSingleInvariantPtr& invariant, const Params& params)
+// // : invariant_(invariant), params_(params)
+// {
+//   invariant_ = invariant;
+//   params_ = params;
+// }
+
 // ----------------------------------------------------------------------------
 
 void CLIPPER::scorePairwiseConsistency(const invariants::Data& D1,
@@ -52,6 +60,63 @@ void CLIPPER::scorePairwiseConsistency(const invariants::Data& D1,
     const double scr = (*invariant_)(d1i, d1j, d2i, d2j);
     if (scr > params_.affinityeps) { // does not violate inconsistency constraint
       M(i,j) = scr;
+    }
+  }
+
+  // Identity on diagonal is taken care of implicitly in findDenseClique()
+  // M += Eigen::MatrixXd::Identity(m, m);
+
+  M_ = M.sparseView();
+
+  C_ = M_;
+  C_.coeffs() = 1;
+}
+
+// ----------------------------------------------------------------------------
+
+void CLIPPERPairwiseAndSingle::scorePairwiseAndSingleConsistency(const invariants::Data& D1,
+                              const invariants::Data& D2, const Association& A)
+{
+  
+  if (A.size() == 0) A_ = utils::createAllToAll(D1.cols(), D2.cols());
+  else A_ = A;
+
+  const size_t m = A_.rows();
+
+  Eigen::MatrixXd M = Eigen::MatrixXd::Zero(m, m);
+  Eigen::VectorXd single_sim = Eigen::VectorXd::Zero(m);
+
+  for (size_t i=0; i<m; ++i) {
+    const auto& d1i = D1.col(A_(i,0));
+    const auto& d2i = D2.col(A_(i,1));
+    single_sim(i) = invariant_->single_similarity(d1i, d2i);
+  }
+
+#pragma omp parallel for shared(A_, D1, D2, M_, C_) if(parallelize_)
+  for (size_t k=0; k<m*(m-1)/2; ++k) {
+    size_t i, j; std::tie(i, j) = utils::k2ij(k, m);
+
+    if (A_(i,0) == A_(j,0) || A_(i,1) == A_(j,1)) {
+      // violates distinctness constraint
+      continue;
+    }
+
+    //
+    // Evaluate the consistency of geometric invariants associated with ei, ej
+    //
+
+    // points to extract invariant from in D1
+    const auto& d1i = D1.col(A_(i,0));
+    const auto& d1j = D1.col(A_(j,0));
+
+    // points to extract invariant from in D2
+    const auto& d2i = D2.col(A_(i,1));
+    const auto& d2j = D2.col(A_(j,1));
+
+    const double scr = invariant_->pairwise_similarity(d1i, d1j, d2i, d2j);
+    const double fused_score = invariant_->pairwise_single_fusion(scr, single_sim(i), single_sim(j));
+    if (fused_score > params_.affinityeps) { // does not violate inconsistency constraint
+      M(i,j) = fused_score;
     }
   }
 

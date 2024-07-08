@@ -147,7 +147,7 @@ namespace clipper {
 
     void setParallelize(bool parallelize) { parallelize_ = parallelize; };
 
-  private:
+  protected:
     Params params_;
     invariants::PairwiseInvariantPtr invariant_;
 
@@ -180,6 +180,37 @@ namespace clipper {
      * @param[in]  C        nxn binary constraint matrix. Active const. are 0.
      */
     void findDenseClique(const Eigen::VectorXd& u0);
+  };
+
+  /**
+   * @brief      Convenience class to use CLIPPER for data association.
+   */
+  class CLIPPERPairwiseAndSingle : public CLIPPER
+  {
+    public:
+      CLIPPERPairwiseAndSingle(const invariants::PairwiseAndSingleInvariantPtr& invariant, const Params& params)
+      : CLIPPER(invariant, params)
+      {
+        invariant_ = invariant;
+      }
+
+      ~CLIPPERPairwiseAndSingle() = default;
+
+    /**
+    * @brief      Creates an affinity matrix containing consistency scores for
+    *             each of the m pairwise associations listed in matrix A.
+    *
+    * @param[in]  D1           Dataset 1 of n1 d-dim elements (dxn1)
+    * @param[in]  D2           Dataset 2 of n2 d-dim elements (dxn2)
+    * @param[in]  A            Associations to score (mx2)
+    */
+    void scorePairwiseAndSingleConsistency(const invariants::Data& D1,
+                              const invariants::Data& D2, 
+                              const Association& A  = Association());
+
+    private:
+      invariants::PairwiseAndSingleInvariantPtr invariant_;
+
   };
 
 } // ns clipper

@@ -73,5 +73,66 @@ namespace invariants {
 
   using PairwiseInvariantPtr = std::shared_ptr<PairwiseInvariant>;
 
+  /**
+   * @brief      An extension of the pairwise invariant that also includes scoring the similarity 
+   *             between each individual association.
+   */
+  class PairwiseAndSingleInvariant : public PairwiseInvariant
+  {
+  public:
+    virtual ~PairwiseAndSingleInvariant() = default;
+
+    /**
+     * @brief      Functor for pairwise invariant scoring function
+     *
+     * @param[in]  ai    Element i from dataset 1
+     * @param[in]  aj    Element j from dataset 1
+     * @param[in]  bi    Element i from dataset 2
+     * @param[in]  bj    Element j from dataset 2
+     *
+     * @return     The consistency score for the association of (ai,bi) and (aj,bj)
+     */
+    double operator()(const Datum& ai, const Datum& aj, const Datum& bi, const Datum& bj) 
+    {
+      return pairwise_similarity(ai, aj, bi, bj);
+    }
+
+    /**
+     * @brief      Functor for pairwise invariant scoring function
+     *
+     * @param[in]  ai    Element i from dataset 1
+     * @param[in]  aj    Element j from dataset 1
+     * @param[in]  bi    Element i from dataset 2
+     * @param[in]  bj    Element j from dataset 2
+     *
+     * @return     The consistency score for the association of (ai,bi) and (aj,bj)
+     */
+    virtual double pairwise_similarity(const Datum& ai, const Datum& aj, const Datum& bi, const Datum& bj) = 0;
+
+    /**
+     * @brief      Functor for the scoring of a single association
+     *
+     * @param[in]  ai    Element i from dataset 1
+     * @param[in]  bi    Element i from dataset 2
+     *
+     * @return     The consistency score for the association of (ai,bi)
+     */
+    virtual double single_similarity(const Datum& ai, const Datum& bi) = 0;
+
+    /**
+     * @brief      Functor for fusing the pairwise and single scores
+     *
+     * @param[in]  pair_ij    Score for pair of associations
+     * @param[in]  single_i   Single-association score for i
+     * @param[in]  single_j   Single-association score for j
+     *
+     * @return     The consistency score for the fused pairwise and single scores
+     */
+    virtual double pairwise_single_fusion(const double& pair_ij, 
+      const double& single_i, const double& single_j) = 0;
+  };
+
+  using PairwiseAndSingleInvariantPtr = std::shared_ptr<PairwiseAndSingleInvariant>;
+
 } // ns invariants
 } // ns clipper
