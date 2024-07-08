@@ -28,3 +28,25 @@ public:
       PYBIND11_OVERRIDE_PURE_NAME(double, PairwiseInvariantBase, "__call__", operator(), ai, aj, bi, bj);
     }
 };
+
+template <class PairwiseAndSingleInvariantBase = clipper::invariants::PairwiseAndSingleInvariant>
+class PyPairwiseAndSingleInvariant : public PyPairwiseInvariant<PairwiseAndSingleInvariantBase> {
+public:
+    using PyPairwiseInvariant<PairwiseAndSingleInvariantBase>::PyPairwiseInvariant; // Inherit constructors
+    using Datum = clipper::invariants::Datum; // for convenience
+    // trampoline for virtual function
+    double single_similarity(const Datum& ai, const Datum& bi) override {
+      pybind11::gil_scoped_acquire acquire; // Acquire GIL before calling Python code
+      PYBIND11_OVERRIDE_PURE_NAME(double, PairwiseAndSingleInvariantBase, "single_similarity", single_similarity, ai, bi);
+    }
+    // trampoline for virtual function
+    double pairwise_single_fusion(const double& single_i, const double& single_j, const double& pair_ij) override {
+      pybind11::gil_scoped_acquire acquire; // Acquire GIL before calling Python code
+      PYBIND11_OVERRIDE_PURE_NAME(double, PairwiseAndSingleInvariantBase, "pairwise_single_fusion", pairwise_single_fusion, single_i, single_j, pair_ij);
+    }
+    // trampoline for virtual function
+    double pairwise_similarity(const Datum& ai, const Datum& aj, const Datum& bi, const Datum& bj) override {
+      pybind11::gil_scoped_acquire acquire; // Acquire GIL before calling Python code
+      PYBIND11_OVERRIDE_PURE_NAME(double, PairwiseAndSingleInvariantBase, "pairwise_similarity", pairwise_similarity, ai, aj, bi, bj);
+    }
+};

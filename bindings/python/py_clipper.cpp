@@ -39,6 +39,11 @@ void pybind_invariants(py::module& m)
   py::class_<PairwiseInvariant, Invariant, PyPairwiseInvariant<>, std::shared_ptr<PairwiseInvariant>>(m, "PairwiseInvariant")
     .def(py::init<>())
     .def("__call__", &clipper::invariants::PairwiseInvariant::operator());
+  py::class_<PairwiseAndSingleInvariant, PairwiseInvariant, Invariant, PyPairwiseAndSingleInvariant<>, std::shared_ptr<PairwiseAndSingleInvariant>>(m, "PairwiseAndSingleInvariant")
+    .def(py::init<>())
+    .def("pairwise_similarity", &clipper::invariants::PairwiseAndSingleInvariant::pairwise_similarity)
+    .def("single_similarity", &clipper::invariants::PairwiseAndSingleInvariant::single_similarity)
+    .def("pairwise_single_fusion", &clipper::invariants::PairwiseAndSingleInvariant::pairwise_single_fusion);
 
   //
   // Gravity Constrained Distance
@@ -140,6 +145,43 @@ void pybind_invariants(py::module& m)
     .def_readwrite("gravity_guided", &clipper::invariants::DistanceFeatureSimilarity::Params::gravity_guided)
     .def_readwrite("similarity_fusion_method", &clipper::invariants::DistanceFeatureSimilarity::Params::similarity_fusion_method)
     .def_readwrite("distance_fusion_weight", &clipper::invariants::DistanceFeatureSimilarity::Params::distance_fusion_weight);
+
+  //
+  // Distance Min Max Similarity
+  //
+  py::class_<DistanceMinMaxSimilarity, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceMinMaxSimilarity>, std::shared_ptr<DistanceMinMaxSimilarity>> distminmaxsimilarity(m, "DistanceMinMaxSimilarity");
+  distminmaxsimilarity.def(py::init<const DistanceMinMaxSimilarity::Params&>());
+
+  py::enum_<DistanceMinMaxSimilarity::SimilarityFusionMethod>(distminmaxsimilarity, "SimilarityFusionMethod")
+    .value("GEOMETRIC_MEAN", DistanceMinMaxSimilarity::SimilarityFusionMethod::GEOMETRIC_MEAN)
+    .value("ARITHMETIC_MEAN", DistanceMinMaxSimilarity::SimilarityFusionMethod::ARITHMETIC_MEAN)
+    .value("PRODUCT", DistanceMinMaxSimilarity::SimilarityFusionMethod::PRODUCT)
+    .export_values();
+
+  py::class_<DistanceMinMaxSimilarity::Params>(m, "DistanceMinMaxSimilarityParams")
+    .def(py::init<>())
+    .def("__repr__", [](const DistanceMinMaxSimilarity::Params &params) {
+      std::ostringstream repr;
+      repr << "<DistanceMinMaxSimilarityParams : point_dim=" << params.point_dim;
+      repr << " feature_dim=" << params.feature_dim;
+      repr << " sigma=" << params.sigma;
+      repr << " epsilon=" << params.epsilon;
+      repr << " mindist=" << params.mindist;
+      repr << " feature_epsilon=" << params.feature_epsilon;
+      repr << " gravity_guided=" << params.gravity_guided;
+      repr << " similarity_fusion_method=" << params.similarity_fusion_method;
+      repr << " distance_fusion_weight=" << params.distance_fusion_weight << ">";
+      return repr.str();
+    })
+    .def_readwrite("point_dim", &clipper::invariants::DistanceMinMaxSimilarity::Params::point_dim)
+    .def_readwrite("feature_dim", &clipper::invariants::DistanceMinMaxSimilarity::Params::feature_dim)
+    .def_readwrite("sigma", &clipper::invariants::DistanceMinMaxSimilarity::Params::sigma)
+    .def_readwrite("epsilon", &clipper::invariants::DistanceMinMaxSimilarity::Params::epsilon)
+    .def_readwrite("mindist", &clipper::invariants::DistanceMinMaxSimilarity::Params::mindist)
+    .def_readwrite("feature_epsilon", &clipper::invariants::DistanceMinMaxSimilarity::Params::feature_epsilon)
+    .def_readwrite("gravity_guided", &clipper::invariants::DistanceMinMaxSimilarity::Params::gravity_guided)
+    .def_readwrite("similarity_fusion_method", &clipper::invariants::DistanceMinMaxSimilarity::Params::similarity_fusion_method)
+    .def_readwrite("distance_fusion_weight", &clipper::invariants::DistanceMinMaxSimilarity::Params::distance_fusion_weight);
 
   //
   // Euclidean Distance
@@ -331,4 +373,42 @@ PYBIND11_MODULE(clipperpy, m)
     .def("set_matrix_data", &clipper::CLIPPER::setMatrixData,
           "M"_a.noconvert(), "C"_a.noconvert())
     .def("set_parallelize", &clipper::CLIPPER::setParallelize);
+
+  py::class_<clipper::CLIPPERPairwiseAndSingle>(m, "CLIPPERPairwiseAndSingle")
+    .def(py::init(
+      [](const clipper::invariants::PairwiseAndSingleInvariantPtr& invariant,
+          const clipper::Params& params)
+      {
+        clipper::CLIPPERPairwiseAndSingle *clipper = new clipper::CLIPPERPairwiseAndSingle(invariant, params);
+        // Python extended c++ classes cannot use parallelization due to
+        // GIL-related resoure deadlocking issues for derived classes.
+        // See also https://github.com/pybind/pybind11/issues/813.
+        // Python extended c++ classes will inherit from PyPairwiseInvariant.
+        // bool parallelize = (std::dynamic_pointer_cast<PyPairwiseAndSingleInvariant<>>(invariant)) ? false : true;
+        // clipper->setParallelize(parallelize);
+        clipper->setParallelize(true);
+        return clipper;
+      }))
+    .def("__repr__", [](const clipper::CLIPPERPairwiseAndSingle &clipper) {
+      std::ostringstream repr;
+      repr << "<CLIPPERPairwiseAndSingle>";
+      return repr.str();
+    })
+    .def("score_pairwise_and_single_consistency", &clipper::CLIPPERPairwiseAndSingle::scorePairwiseAndSingleConsistency,
+          // py::call_guard<py::gil_scoped_release>(),
+          "D1"_a.noconvert(), "D2"_a.noconvert(), "A"_a.noconvert())
+    .def("solve", &clipper::CLIPPERPairwiseAndSingle::solve,
+          "u0"_a.noconvert()=Eigen::VectorXd())
+    .def("solve_as_maximum_clique", &clipper::CLIPPERPairwiseAndSingle::solveAsMaximumClique,
+          "params"_a=clipper::maxclique::Params{})
+    .def("solve_as_msrc_sdr", &clipper::CLIPPERPairwiseAndSingle::solveAsMSRCSDR,
+          "params"_a=clipper::sdp::Params{})
+    .def("get_initial_associations", &clipper::CLIPPERPairwiseAndSingle::getInitialAssociations)
+    .def("get_selected_associations", &clipper::CLIPPERPairwiseAndSingle::getSelectedAssociations)
+    .def("get_solution", &clipper::CLIPPERPairwiseAndSingle::getSolution)
+    .def("get_affinity_matrix", &clipper::CLIPPERPairwiseAndSingle::getAffinityMatrix)
+    .def("get_constraint_matrix", &clipper::CLIPPERPairwiseAndSingle::getConstraintMatrix)
+    .def("set_matrix_data", &clipper::CLIPPERPairwiseAndSingle::setMatrixData,
+          "M"_a.noconvert(), "C"_a.noconvert())
+    .def("set_parallelize", &clipper::CLIPPERPairwiseAndSingle::setParallelize);
 }
