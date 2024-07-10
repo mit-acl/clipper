@@ -147,22 +147,22 @@ void pybind_invariants(py::module& m)
     .def_readwrite("distance_fusion_weight", &clipper::invariants::DistanceFeatureSimilarity::Params::distance_fusion_weight);
 
   //
-  // Distance Min Max Similarity
+  // Distance Pairwise and Single
   //
-  py::class_<DistanceMinMaxSimilarity, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceMinMaxSimilarity>, std::shared_ptr<DistanceMinMaxSimilarity>> distminmaxsimilarity(m, "DistanceMinMaxSimilarity");
-  distminmaxsimilarity.def(py::init<const DistanceMinMaxSimilarity::Params&>());
+  py::class_<DistancePairwiseAndSingle, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistancePairwiseAndSingle>, std::shared_ptr<DistancePairwiseAndSingle>> distpairwiseandsingle(m, "DistancePairwiseAndSingle");
+  distpairwiseandsingle.def(py::init<const DistancePairwiseAndSingle::Params&>());
 
-  py::enum_<DistanceMinMaxSimilarity::SimilarityFusionMethod>(distminmaxsimilarity, "SimilarityFusionMethod")
-    .value("GEOMETRIC_MEAN", DistanceMinMaxSimilarity::SimilarityFusionMethod::GEOMETRIC_MEAN)
-    .value("ARITHMETIC_MEAN", DistanceMinMaxSimilarity::SimilarityFusionMethod::ARITHMETIC_MEAN)
-    .value("PRODUCT", DistanceMinMaxSimilarity::SimilarityFusionMethod::PRODUCT)
+  py::enum_<DistancePairwiseAndSingle::SimilarityFusionMethod>(distpairwiseandsingle, "SimilarityFusionMethod")
+    .value("GEOMETRIC_MEAN", DistancePairwiseAndSingle::SimilarityFusionMethod::GEOMETRIC_MEAN)
+    .value("ARITHMETIC_MEAN", DistancePairwiseAndSingle::SimilarityFusionMethod::ARITHMETIC_MEAN)
+    .value("PRODUCT", DistancePairwiseAndSingle::SimilarityFusionMethod::PRODUCT)
     .export_values();
 
-  py::class_<DistanceMinMaxSimilarity::Params>(m, "DistanceMinMaxSimilarityParams")
+  py::class_<DistancePairwiseAndSingle::Params>(m, "DistancePairwiseAndSingleParams")
     .def(py::init<>())
-    .def("__repr__", [](const DistanceMinMaxSimilarity::Params &params) {
+    .def("__repr__", [](const DistancePairwiseAndSingle::Params &params) {
       std::ostringstream repr;
-      repr << "<DistanceMinMaxSimilarityParams : point_dim=" << params.point_dim;
+      repr << "<DistancePairwiseAndSingleParams : point_dim=" << params.point_dim;
       repr << " feature_dim=" << params.feature_dim;
       repr << " sigma=" << params.sigma;
       repr << " epsilon=" << params.epsilon;
@@ -173,15 +173,22 @@ void pybind_invariants(py::module& m)
       repr << " distance_fusion_weight=" << params.distance_fusion_weight << ">";
       return repr.str();
     })
-    .def_readwrite("point_dim", &clipper::invariants::DistanceMinMaxSimilarity::Params::point_dim)
-    .def_readwrite("feature_dim", &clipper::invariants::DistanceMinMaxSimilarity::Params::feature_dim)
-    .def_readwrite("sigma", &clipper::invariants::DistanceMinMaxSimilarity::Params::sigma)
-    .def_readwrite("epsilon", &clipper::invariants::DistanceMinMaxSimilarity::Params::epsilon)
-    .def_readwrite("mindist", &clipper::invariants::DistanceMinMaxSimilarity::Params::mindist)
-    .def_readwrite("feature_epsilon", &clipper::invariants::DistanceMinMaxSimilarity::Params::feature_epsilon)
-    .def_readwrite("gravity_guided", &clipper::invariants::DistanceMinMaxSimilarity::Params::gravity_guided)
-    .def_readwrite("similarity_fusion_method", &clipper::invariants::DistanceMinMaxSimilarity::Params::similarity_fusion_method)
-    .def_readwrite("distance_fusion_weight", &clipper::invariants::DistanceMinMaxSimilarity::Params::distance_fusion_weight);
+    .def_readwrite("point_dim", &clipper::invariants::DistancePairwiseAndSingle::Params::point_dim)
+    .def_readwrite("feature_dim", &clipper::invariants::DistancePairwiseAndSingle::Params::feature_dim)
+    .def_readwrite("sigma", &clipper::invariants::DistancePairwiseAndSingle::Params::sigma)
+    .def_readwrite("epsilon", &clipper::invariants::DistancePairwiseAndSingle::Params::epsilon)
+    .def_readwrite("mindist", &clipper::invariants::DistancePairwiseAndSingle::Params::mindist)
+    .def_readwrite("feature_epsilon", &clipper::invariants::DistancePairwiseAndSingle::Params::feature_epsilon)
+    .def_readwrite("gravity_guided", &clipper::invariants::DistancePairwiseAndSingle::Params::gravity_guided)
+    .def_readwrite("similarity_fusion_method", &clipper::invariants::DistancePairwiseAndSingle::Params::similarity_fusion_method)
+    .def_readwrite("distance_fusion_weight", &clipper::invariants::DistancePairwiseAndSingle::Params::distance_fusion_weight);
+
+  //
+  // Distance Min Max Similarity
+  //
+  py::class_<DistanceMinMaxSimilarity, DistancePairwiseAndSingle, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceMinMaxSimilarity>, std::shared_ptr<DistanceMinMaxSimilarity>> distminmaxsimilarity(m, "DistanceMinMaxSimilarity");
+  // py::class_<DistanceMinMaxSimilarity, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceMinMaxSimilarity>, std::shared_ptr<DistanceMinMaxSimilarity>> distminmaxsimilarity(m, "DistanceMinMaxSimilarity");
+  distminmaxsimilarity.def(py::init<const DistancePairwiseAndSingle::Params&>());
 
   //
   // Euclidean Distance

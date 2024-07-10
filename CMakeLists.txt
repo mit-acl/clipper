@@ -103,6 +103,7 @@ target_sources(clipper PRIVATE
   src/invariants/volume_euclidean_distance.cpp
   src/invariants/volume_gravity_constrained_distance.cpp
   src/invariants/distance_feature_similarity.cpp
+  src/invariants/distance_pairwise_and_single.cpp
   src/invariants/distance_min_max_similarity.cpp)
 target_link_libraries(clipper PUBLIC Eigen3::Eigen)
 target_link_libraries(clipper PRIVATE OpenMP::OpenMP_CXX)
