@@ -1,6 +1,6 @@
 /**
  * @file distance_min_max_similarity.cpp
- * @brief Pairwise/single invariant using pairwise Euclidean distance and min/max single feature similarity
+ * @brief Pairwise/single invariant using pairwise Euclidean distance and cosine similarity
  * @author Mason Peterson <masonbp@mit.edu>
  * @date 5 July 2024
  */

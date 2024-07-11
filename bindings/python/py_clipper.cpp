@@ -187,8 +187,13 @@ void pybind_invariants(py::module& m)
   // Distance Min Max Similarity
   //
   py::class_<DistanceMinMaxSimilarity, DistancePairwiseAndSingle, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceMinMaxSimilarity>, std::shared_ptr<DistanceMinMaxSimilarity>> distminmaxsimilarity(m, "DistanceMinMaxSimilarity");
-  // py::class_<DistanceMinMaxSimilarity, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceMinMaxSimilarity>, std::shared_ptr<DistanceMinMaxSimilarity>> distminmaxsimilarity(m, "DistanceMinMaxSimilarity");
   distminmaxsimilarity.def(py::init<const DistancePairwiseAndSingle::Params&>());
+  
+  //
+  // Distance Cosine Similarity
+  //
+  py::class_<DistanceCosSimilarity, DistancePairwiseAndSingle, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceCosSimilarity>, std::shared_ptr<DistanceCosSimilarity>> distcossimilarity(m, "DistanceCosSimilarity");
+  distcossimilarity.def(py::init<const DistancePairwiseAndSingle::Params&>());
 
   //
   // Euclidean Distance
