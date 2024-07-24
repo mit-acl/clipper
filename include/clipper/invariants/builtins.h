@@ -15,3 +15,5 @@
 #include "clipper/invariants/distance_feature_similarity.h"
 #include "clipper/invariants/distance_min_max_similarity.h"
 #include "clipper/invariants/distance_cos_similarity.h"
+#include "clipper/invariants/distance_cos_scale_similarity.h"
+#include "clipper/invariants/distance_contrastive_similarity.h"
