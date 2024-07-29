@@ -170,7 +170,8 @@ void pybind_invariants(py::module& m)
       repr << " feature_epsilon=" << params.feature_epsilon;
       repr << " gravity_guided=" << params.gravity_guided;
       repr << " similarity_fusion_method=" << params.similarity_fusion_method;
-      repr << " distance_fusion_weight=" << params.distance_fusion_weight << ">";
+      repr << " distance_fusion_weight=" << params.distance_fusion_weight;
+      repr << " cos_feature_dim=" << params.cos_feature_dim << ">";
       return repr.str();
     })
     .def_readwrite("point_dim", &clipper::invariants::DistancePairwiseAndSingle::Params::point_dim)
@@ -181,7 +182,8 @@ void pybind_invariants(py::module& m)
     .def_readwrite("feature_epsilon", &clipper::invariants::DistancePairwiseAndSingle::Params::feature_epsilon)
     .def_readwrite("gravity_guided", &clipper::invariants::DistancePairwiseAndSingle::Params::gravity_guided)
     .def_readwrite("similarity_fusion_method", &clipper::invariants::DistancePairwiseAndSingle::Params::similarity_fusion_method)
-    .def_readwrite("distance_fusion_weight", &clipper::invariants::DistancePairwiseAndSingle::Params::distance_fusion_weight);
+    .def_readwrite("distance_fusion_weight", &clipper::invariants::DistancePairwiseAndSingle::Params::distance_fusion_weight)
+    .def_readwrite("cos_feature_dim", &clipper::invariants::DistancePairwiseAndSingle::Params::cos_feature_dim);
 
   //
   // Distance Min Max Similarity
@@ -194,6 +196,32 @@ void pybind_invariants(py::module& m)
   //
   py::class_<DistanceCosSimilarity, DistancePairwiseAndSingle, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceCosSimilarity>, std::shared_ptr<DistanceCosSimilarity>> distcossimilarity(m, "DistanceCosSimilarity");
   distcossimilarity.def(py::init<const DistancePairwiseAndSingle::Params&>());
+
+  //
+  // Distance Scale Similarity
+  //
+  py::class_<DistanceScaleSimilarity, DistancePairwiseAndSingle, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceScaleSimilarity>, std::shared_ptr<DistanceScaleSimilarity>> distscalesimilarity(m, "DistanceScaleSimilarity");
+  distscalesimilarity.def(py::init<const DistancePairwiseAndSingle::Params&>());
+
+
+  //
+  // Distance Cosine and Scale Similarity
+  //
+  py::class_<DistanceCosScaleSimilarity, DistancePairwiseAndSingle, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceCosScaleSimilarity>, std::shared_ptr<DistanceCosScaleSimilarity>> distcosscalesimilarity(m, "DistanceCosScaleSimilarity");
+  distcosscalesimilarity.def(py::init<const DistancePairwiseAndSingle::Params&>());
+  
+  //
+  // Distance Cosine Head and Scale Similarity
+  //
+  py::class_<DistanceContrastScaleSimilarity, DistancePairwiseAndSingle, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceContrastScaleSimilarity>, std::shared_ptr<DistanceContrastScaleSimilarity>> distcontrastscalesimilarity(m, "DistanceContrastScaleSimilarity");
+  distcontrastscalesimilarity.def(py::init<const DistancePairwiseAndSingle::Params&>());
+
+  //
+  // Distance Contrastive Similarity
+  //
+  py::class_<DistanceContrastiveSimilarity, DistancePairwiseAndSingle, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceContrastiveSimilarity>, std::shared_ptr<DistanceContrastiveSimilarity>> distcontrastivesimilarity(m, "DistanceContrastiveSimilarity");
+  distcontrastivesimilarity.def(py::init<const DistancePairwiseAndSingle::Params&>());
+
 
   //
   // Euclidean Distance
@@ -398,7 +426,8 @@ PYBIND11_MODULE(clipperpy, m)
         // Python extended c++ classes will inherit from PyPairwiseInvariant.
         // bool parallelize = (std::dynamic_pointer_cast<PyPairwiseAndSingleInvariant<>>(invariant)) ? false : true;
         // clipper->setParallelize(parallelize);
-        clipper->setParallelize(true);
+        bool parallelize = (std::dynamic_pointer_cast<PyPairwiseAndSingleInvariant<>>(invariant)) ? false : true;
+        clipper->setParallelize(parallelize);
         return clipper;
       }))
     .def("__repr__", [](const clipper::CLIPPERPairwiseAndSingle &clipper) {
