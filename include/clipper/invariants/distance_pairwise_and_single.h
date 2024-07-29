@@ -35,6 +35,9 @@ namespace invariants {
       bool gravity_guided = false; ///< whether to use gravity-guided prior
       SimilarityFusionMethod similarity_fusion_method = SimilarityFusionMethod::GEOMETRIC_MEAN; ///< which method to use to fuse distance and feature similarities
       double distance_fusion_weight = 1.0;
+      bool drift_aware = false;
+      bool drift_scale_sigma = false;
+      double drift_scale = 0.1;
     };
   public:
     DistancePairwiseAndSingle(const Params& params)
