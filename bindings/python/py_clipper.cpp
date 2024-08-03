@@ -171,7 +171,11 @@ void pybind_invariants(py::module& m)
       repr << " gravity_guided=" << params.gravity_guided;
       repr << " similarity_fusion_method=" << params.similarity_fusion_method;
       repr << " distance_fusion_weight=" << params.distance_fusion_weight;
-      repr << " cos_feature_dim=" << params.cos_feature_dim << ">";
+      repr << " drift_aware=" << params.drift_aware;
+      repr << " drift_scale_sigma=" << params.drift_scale_sigma;
+      repr << " drift_scale=" << params.drift_scale;
+      repr << " cos_feature_dim=" << params.cos_feature_dim;
+      repr << ">";
       return repr.str();
     })
     .def_readwrite("point_dim", &clipper::invariants::DistancePairwiseAndSingle::Params::point_dim)
@@ -183,6 +187,9 @@ void pybind_invariants(py::module& m)
     .def_readwrite("gravity_guided", &clipper::invariants::DistancePairwiseAndSingle::Params::gravity_guided)
     .def_readwrite("similarity_fusion_method", &clipper::invariants::DistancePairwiseAndSingle::Params::similarity_fusion_method)
     .def_readwrite("distance_fusion_weight", &clipper::invariants::DistancePairwiseAndSingle::Params::distance_fusion_weight)
+    .def_readwrite("drift_aware", &clipper::invariants::DistancePairwiseAndSingle::Params::drift_aware)
+    .def_readwrite("drift_scale_sigma", &clipper::invariants::DistancePairwiseAndSingle::Params::drift_scale_sigma)
+    .def_readwrite("drift_scale", &clipper::invariants::DistancePairwiseAndSingle::Params::drift_scale)
     .def_readwrite("cos_feature_dim", &clipper::invariants::DistancePairwiseAndSingle::Params::cos_feature_dim);
 
   //

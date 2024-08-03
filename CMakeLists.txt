@@ -115,7 +115,7 @@ target_link_libraries(clipper PRIVATE OpenMP::OpenMP_CXX)
 target_include_directories(clipper PUBLIC
     $<INSTALL_INTERFACE:include>
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
-target_compile_options(clipper PUBLIC -march=native -mavx -mfma)
+target_compile_options(clipper PUBLIC -march=native) # -mavx -mfma)
 set_target_properties(clipper PROPERTIES
   VERSION ${PROJECT_VERSION})
 target_compile_definitions(clipper PUBLIC CLIPPER_VERSION="${PROJECT_VERSION}")
