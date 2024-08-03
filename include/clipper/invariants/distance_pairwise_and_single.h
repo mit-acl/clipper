@@ -38,6 +38,7 @@ namespace invariants {
       bool drift_aware = false;
       bool drift_scale_sigma = false;
       double drift_scale = 0.1;
+      uint8_t cos_feature_dim = 0; ///< number of features used for cosine similarity
     };
   public:
     DistancePairwiseAndSingle(const Params& params)
