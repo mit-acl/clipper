@@ -27,7 +27,7 @@ namespace invariants {
     struct Params
     {
       uint8_t point_dim = 3; ///< dimension of points (2 or 3)
-      uint8_t feature_dim = 0; ///< number of features to consider
+      uint32_t feature_dim = 0; ///< number of features to consider
       double sigma = 0.01; ///< spread / "variance" of exponential kernel
       double epsilon = 0.06; ///< bound on consistency score, determines if inlier/outlier
       double mindist = 0.0; ///< minimum allowable distance between inlier points in the same dataset
@@ -35,7 +35,10 @@ namespace invariants {
       bool gravity_guided = false; ///< whether to use gravity-guided prior
       SimilarityFusionMethod similarity_fusion_method = SimilarityFusionMethod::GEOMETRIC_MEAN; ///< which method to use to fuse distance and feature similarities
       double distance_fusion_weight = 1.0;
-      uint8_t cos_feature_dim = 0; ///< number of features used for cosine similarity
+      uint32_t cos_feature_dim = 0; ///< number of features used for cosine similarity
+      double cosine_weight = 1.0;
+      double cosine_min = 0.8;
+      double cosine_max = 0.95;
     };
   public:
     DistancePairwiseAndSingle(const Params& params)

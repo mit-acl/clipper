@@ -27,7 +27,7 @@ namespace invariants {
     struct Params
     {
       uint8_t point_dim = 3; ///< dimension of points (2 or 3)
-      uint8_t feature_dim = 0; ///< number of features to consider
+      uint16_t feature_dim = 0; ///< number of features to consider
       double sigma = 0.01; ///< spread / "variance" of exponential kernel
       double epsilon = 0.06; ///< bound on consistency score, determines if inlier/outlier
       double mindist = 0; ///< minimum allowable distance between inlier points in the same dataset

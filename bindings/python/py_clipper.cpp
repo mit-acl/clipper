@@ -171,7 +171,10 @@ void pybind_invariants(py::module& m)
       repr << " gravity_guided=" << params.gravity_guided;
       repr << " similarity_fusion_method=" << params.similarity_fusion_method;
       repr << " distance_fusion_weight=" << params.distance_fusion_weight;
-      repr << " cos_feature_dim=" << params.cos_feature_dim << ">";
+      repr << " cos_feature_dim=" << params.cos_feature_dim;
+      repr << " cosine_weight=" << params.cosine_weight;
+      repr << " cosine_min=" << params.cosine_min;
+      repr << " cosine_max=" << params.cosine_max << ">";
       return repr.str();
     })
     .def_readwrite("point_dim", &clipper::invariants::DistancePairwiseAndSingle::Params::point_dim)
@@ -183,7 +186,10 @@ void pybind_invariants(py::module& m)
     .def_readwrite("gravity_guided", &clipper::invariants::DistancePairwiseAndSingle::Params::gravity_guided)
     .def_readwrite("similarity_fusion_method", &clipper::invariants::DistancePairwiseAndSingle::Params::similarity_fusion_method)
     .def_readwrite("distance_fusion_weight", &clipper::invariants::DistancePairwiseAndSingle::Params::distance_fusion_weight)
-    .def_readwrite("cos_feature_dim", &clipper::invariants::DistancePairwiseAndSingle::Params::cos_feature_dim);
+    .def_readwrite("cos_feature_dim", &clipper::invariants::DistancePairwiseAndSingle::Params::cos_feature_dim)
+    .def_readwrite("cosine_weight", &clipper::invariants::DistancePairwiseAndSingle::Params::cosine_weight)
+    .def_readwrite("cosine_min", &clipper::invariants::DistancePairwiseAndSingle::Params::cosine_min)
+    .def_readwrite("cosine_max", &clipper::invariants::DistancePairwiseAndSingle::Params::cosine_max);
 
   //
   // Distance Min Max Similarity
@@ -209,7 +215,13 @@ void pybind_invariants(py::module& m)
   //
   py::class_<DistanceCosScaleSimilarity, DistancePairwiseAndSingle, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceCosScaleSimilarity>, std::shared_ptr<DistanceCosScaleSimilarity>> distcosscalesimilarity(m, "DistanceCosScaleSimilarity");
   distcosscalesimilarity.def(py::init<const DistancePairwiseAndSingle::Params&>());
-  
+
+  //
+  // Distance Cosine and Volume Similarity
+  //
+  py::class_<DistanceCosVolSimilarity, DistancePairwiseAndSingle, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceCosVolSimilarity>, std::shared_ptr<DistanceCosVolSimilarity>> distcosvolsimilarity(m, "DistanceCosVolSimilarity");
+  distcosvolsimilarity.def(py::init<const DistancePairwiseAndSingle::Params&>());
+
   //
   // Distance Cosine Head and Scale Similarity
   //
@@ -221,6 +233,12 @@ void pybind_invariants(py::module& m)
   //
   py::class_<DistanceContrastiveSimilarity, DistancePairwiseAndSingle, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceContrastiveSimilarity>, std::shared_ptr<DistanceContrastiveSimilarity>> distcontrastivesimilarity(m, "DistanceContrastiveSimilarity");
   distcontrastivesimilarity.def(py::init<const DistancePairwiseAndSingle::Params&>());
+
+  //
+  // Distance Semantics Similarity
+  //
+  py::class_<DistanceSemanticSimilarity, DistancePairwiseAndSingle, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceSemanticSimilarity>, std::shared_ptr<DistanceSemanticSimilarity>> distsemanticsimilarity(m, "DistanceSemanticSimilarity");
+  distsemanticsimilarity.def(py::init<const DistancePairwiseAndSingle::Params&>());
 
 
   //

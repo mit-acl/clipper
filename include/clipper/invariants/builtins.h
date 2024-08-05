@@ -17,5 +17,7 @@
 #include "clipper/invariants/distance_cos_similarity.h"
 #include "clipper/invariants/distance_scale_similarity.h"
 #include "clipper/invariants/distance_cos_scale_similarity.h"
+#include "clipper/invariants/distance_cos_vol_similarity.h"
 #include "clipper/invariants/distance_contrast_scale_similarity.h"
 #include "clipper/invariants/distance_contrastive_similarity.h"
+#include "clipper/invariants/distance_semantic_similarity.h"
