@@ -1,7 +1,7 @@
 /**
  * @file distance_contrastive_similarity.h
  * @brief Pairwise/single invariant using pairwise Euclidean distance and min/max single feature similarity
- * @author Mason Peterson <masonbp@mit.edu>
+ * @author Lucas Jia <yixuany@mit.edu>
  * @date 5 July 2024
  */
 

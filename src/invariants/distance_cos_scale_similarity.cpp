@@ -1,7 +1,7 @@
 /**
  * @file distance_l2_similarity.cpp
  * @brief Pairwise/single invariant using pairwise Euclidean distance and l2 similarity
- * @author Mason Peterson <masonbp@mit.edu>
+ * @author Lucas Jia <yixuany@mit.edu>
  * @date 5 July 2024
  */
 
