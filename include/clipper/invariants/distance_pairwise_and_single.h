@@ -39,6 +39,10 @@ namespace invariants {
       double cosine_weight = 1.0;
       double cosine_min = 0.8;
       double cosine_max = 0.95;
+      bool drift_aware = false;
+      bool drift_scale_sigma = false;
+      double drift_scale = 0.1;
+      uint8_t cos_feature_dim = 0; ///< number of features used for cosine similarity
     };
   public:
     DistancePairwiseAndSingle(const Params& params)

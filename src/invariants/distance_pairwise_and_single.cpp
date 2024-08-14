@@ -27,8 +27,15 @@ double DistancePairwiseAndSingle::pairwise_similarity(const Datum& ai, const Dat
     return 0.0;
   }
 
-  // distance similarity score (including gravity-guidance)
+  // handle drift aware epsilon
+  const double epsilon = params_.drift_aware ? 
+    std::max(params_.epsilon, params_.epsilon*params_.drift_scale*0.5*(l1 + l2)) :
+    params_.epsilon;
+  const double sigma = params_.drift_aware && params_.drift_scale_sigma ? 
+    std::max(params_.sigma, params_.sigma*params_.drift_scale*0.5*(l1 + l2)) :
+    params_.sigma;
 
+  // distance similarity score (including gravity-guidance)
   double distance_score = 0.0;
   if (params_.gravity_guided) {
     // gravity-guided distance similarity
@@ -41,20 +48,20 @@ double DistancePairwiseAndSingle::pairwise_similarity(const Datum& ai, const Dat
     const double c_xy = std::abs(xy_dist1 - xy_dist2);
     const double c_z = std::abs(z_diff1 - z_diff2);
 
-    if (c_xy > SQRT_TWO_THIRDS*params_.epsilon || c_z > SQRT_ONE_THIRD*params_.epsilon) {
+    if (c_xy > SQRT_TWO_THIRDS*epsilon || c_z > SQRT_ONE_THIRD*epsilon) {
       return 0.0;
     } else {
-      return std::exp(-0.5*(c_xy*c_xy/(2.0/3.0*params_.sigma*params_.sigma) + 
-          c_z*c_z/(params_.sigma*params_.sigma/3.0)));
+      return std::exp(-0.5*(c_xy*c_xy/(2.0/3.0*sigma*sigma) + 
+          c_z*c_z/(sigma*sigma/3.0)));
     }
 
   } else {
     // standard distance similarity
     const double c = std::abs(l1 - l2);
-    if (c > params_.epsilon) {
+    if (c > epsilon) {
       return 0.0;
     } else {
-      return std::exp(-0.5*c*c/(params_.sigma*params_.sigma));
+      return std::exp(-0.5*c*c/(sigma*sigma));
     }
 
   }
