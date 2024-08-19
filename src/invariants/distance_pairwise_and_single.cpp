@@ -71,10 +71,12 @@ double DistancePairwiseAndSingle::pairwise_similarity(const Datum& ai, const Dat
 double DistancePairwiseAndSingle::pairwise_single_fusion(
     const double& pair_ij, const double& single_i, const double& single_j)
 {
-  if (params_.feature_dim > 0) {
+  if (params_.feature_dim > 0 or params_.cos_feature_dim > 0) {
     switch (params_.similarity_fusion_method) {
       case SimilarityFusionMethod::GEOMETRIC_MEAN: {
         double dist_score_pow = std::pow(pair_ij, params_.distance_fusion_weight);
+        // std::cout << "single_i: " << single_i << " single_j: " << single_j;
+        // std::cout << "dist_score_pow: " << dist_score_pow;
         return std::pow(dist_score_pow * single_i * single_j, 1.0/(params_.distance_fusion_weight + 2.0));
         break;
       }
