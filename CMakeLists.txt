@@ -108,8 +108,10 @@ target_sources(clipper PRIVATE
   src/invariants/distance_cos_similarity.cpp
   src/invariants/distance_scale_similarity.cpp
   src/invariants/distance_cos_scale_similarity.cpp
+  src/invariants/distance_cos_vol_similarity.cpp
   src/invariants/distance_contrast_scale_similarity.cpp
-  src/invariants/distance_contrastive_similarity.cpp)
+  src/invariants/distance_contrastive_similarity.cpp
+  src/invariants/distance_semantic_similarity.cpp)
 target_link_libraries(clipper PUBLIC Eigen3::Eigen)
 target_link_libraries(clipper PRIVATE OpenMP::OpenMP_CXX)
 target_include_directories(clipper PUBLIC

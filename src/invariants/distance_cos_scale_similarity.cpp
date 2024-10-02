@@ -22,11 +22,17 @@ double DistanceCosScaleSimilarity::single_similarity(const Datum& ai, const Datu
 
   const float scale_ratio_1 = ai_feat.norm() / bi_feat.norm();
   const float scale_ratio_2 = bi_feat.norm() / ai_feat.norm();
-  if (scale_ratio_1 < scale_ratio_2) {
-    return ((ai_feat.transpose() * bi_feat)(0) / (ai_feat.norm() * bi_feat.norm())) * scale_ratio_1;
-  }
 
-  return ((ai_feat.transpose() * bi_feat)(0) / (ai_feat.norm() * bi_feat.norm())) * scale_ratio_2;
+  const float cosine_score = ((ai_feat.transpose() * bi_feat)(0) / (ai_feat.norm() * bi_feat.norm()));
+
+  if (scale_ratio_1 < scale_ratio_2) {
+    // return cosine_score * scale_ratio_1;
+    return std::pow(cosine_score * scale_ratio_1, 1.0 / 2.0);
+    // return std::pow(cosine_score * std::pow(scale_ratio_1, 2.0), 1.0/3.0);
+  }
+  // return cosine_score * scale_ratio_2;
+  return std::pow(cosine_score * scale_ratio_2, 1.0 / 2.0);
+  // return std::pow(cosine_score * std::pow(scale_ratio_2, 2.0), 1.0/3.0);
 }
 
 } // ns invariants
