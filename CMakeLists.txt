@@ -99,18 +99,7 @@ target_sources(clipper PRIVATE
   src/maxclique.cpp
   src/invariants/euclidean_distance.cpp
   src/invariants/pointnormal_distance.cpp
-  src/invariants/gravity_constrained_distance.cpp
-  src/invariants/volume_euclidean_distance.cpp
-  src/invariants/volume_gravity_constrained_distance.cpp
-  src/invariants/distance_feature_similarity.cpp
   src/invariants/distance_pairwise_and_single.cpp
-  src/invariants/distance_min_max_similarity.cpp
-  src/invariants/distance_cos_similarity.cpp
-  src/invariants/distance_scale_similarity.cpp
-  src/invariants/distance_cos_scale_similarity.cpp
-  src/invariants/distance_cos_vol_similarity.cpp
-  src/invariants/distance_contrast_scale_similarity.cpp
-  src/invariants/distance_contrastive_similarity.cpp
   src/invariants/distance_semantic_similarity.cpp)
 target_link_libraries(clipper PUBLIC Eigen3::Eigen)
 target_link_libraries(clipper PRIVATE OpenMP::OpenMP_CXX)

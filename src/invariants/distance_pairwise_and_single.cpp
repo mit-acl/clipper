@@ -5,7 +5,7 @@
  * @date 5 July 2024
  */
 
-#include "clipper/invariants/distance_min_max_similarity.h"
+#include "clipper/invariants/distance_pairwise_and_single.h"
 #include <iostream>
 
 #define SQRT_TWO_THIRDS 0.81649658092
