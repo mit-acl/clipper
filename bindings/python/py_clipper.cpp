@@ -46,63 +46,58 @@ void pybind_invariants(py::module& m)
     .def("pairwise_single_fusion", &clipper::invariants::PairwiseAndSingleInvariant::pairwise_single_fusion);
 
   //
-  // Distance Pairwise and Single
+  // ROMAN affinity metric
   //
-  py::class_<DistancePairwiseAndSingle, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistancePairwiseAndSingle>, std::shared_ptr<DistancePairwiseAndSingle>> distpairwiseandsingle(m, "DistancePairwiseAndSingle");
-  distpairwiseandsingle.def(py::init<const DistancePairwiseAndSingle::Params&>());
+  py::class_<ROMAN, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<ROMAN>, std::shared_ptr<ROMAN>> distpairwiseandsingle(m, "ROMAN");
+  distpairwiseandsingle.def(py::init<const ROMAN::Params&>());
 
-  py::enum_<DistancePairwiseAndSingle::SimilarityFusionMethod>(distpairwiseandsingle, "SimilarityFusionMethod")
-    .value("GEOMETRIC_MEAN", DistancePairwiseAndSingle::SimilarityFusionMethod::GEOMETRIC_MEAN)
-    .value("ARITHMETIC_MEAN", DistancePairwiseAndSingle::SimilarityFusionMethod::ARITHMETIC_MEAN)
-    .value("PRODUCT", DistancePairwiseAndSingle::SimilarityFusionMethod::PRODUCT)
+  py::enum_<ROMAN::SimilarityFusionMethod>(distpairwiseandsingle, "SimilarityFusionMethod")
+    .value("GEOMETRIC_MEAN", ROMAN::SimilarityFusionMethod::GEOMETRIC_MEAN)
+    .value("ARITHMETIC_MEAN", ROMAN::SimilarityFusionMethod::ARITHMETIC_MEAN)
+    .value("PRODUCT", ROMAN::SimilarityFusionMethod::PRODUCT)
     .export_values();
 
-  py::class_<DistancePairwiseAndSingle::Params>(m, "DistancePairwiseAndSingleParams")
+  py::class_<ROMAN::Params>(m, "ROMANParams")
     .def(py::init<>())
-    .def("__repr__", [](const DistancePairwiseAndSingle::Params &params) {
+    .def("__repr__", [](const ROMAN::Params &params) {
       std::ostringstream repr;
-      repr << "<DistancePairwiseAndSingleParams : point_dim=" << params.point_dim;
-      repr << " feature_dim=" << params.feature_dim;
+      repr << "<ROMANParams : point_dim=" << params.point_dim;
+      repr << " ratio_feature_dim=" << params.ratio_feature_dim;
+      repr << " cos_feature_dim=" << params.cos_feature_dim;
+      repr << " fusion_method=" << params.fusion_method;
       repr << " sigma=" << params.sigma;
       repr << " epsilon=" << params.epsilon;
       repr << " mindist=" << params.mindist;
-      repr << " feature_epsilon=" << params.feature_epsilon;
+      repr << " distance_weight=" << params.distance_weight;
+      repr << " ratio_weight=" << params.ratio_weight;
+      repr << " cosine_weight=" << params.cosine_weight;
+      repr << " ratio_epsilon=" << params.ratio_epsilon;
+      repr << " cosine_min=" << params.cosine_min;
+      repr << " cosine_max=" << params.cosine_max;
       repr << " gravity_guided=" << params.gravity_guided;
-      repr << " similarity_fusion_method=" << params.similarity_fusion_method;
-      repr << " distance_fusion_weight=" << params.distance_fusion_weight;
       repr << " drift_aware=" << params.drift_aware;
       repr << " drift_scale_sigma=" << params.drift_scale_sigma;
       repr << " drift_scale=" << params.drift_scale;
-      repr << " cos_feature_dim=" << params.cos_feature_dim;
-      repr << " cosine_weight=" << params.cosine_weight;
-      repr << " cosine_min=" << params.cosine_min;
-      repr << " cosine_max=" << params.cosine_max;
       repr << ">";
       return repr.str();
     })
-    .def_readwrite("point_dim", &clipper::invariants::DistancePairwiseAndSingle::Params::point_dim)
-    .def_readwrite("feature_dim", &clipper::invariants::DistancePairwiseAndSingle::Params::feature_dim)
-    .def_readwrite("sigma", &clipper::invariants::DistancePairwiseAndSingle::Params::sigma)
-    .def_readwrite("epsilon", &clipper::invariants::DistancePairwiseAndSingle::Params::epsilon)
-    .def_readwrite("mindist", &clipper::invariants::DistancePairwiseAndSingle::Params::mindist)
-    .def_readwrite("feature_epsilon", &clipper::invariants::DistancePairwiseAndSingle::Params::feature_epsilon)
-    .def_readwrite("gravity_guided", &clipper::invariants::DistancePairwiseAndSingle::Params::gravity_guided)
-    .def_readwrite("similarity_fusion_method", &clipper::invariants::DistancePairwiseAndSingle::Params::similarity_fusion_method)
-    .def_readwrite("distance_fusion_weight", &clipper::invariants::DistancePairwiseAndSingle::Params::distance_fusion_weight)
-    .def_readwrite("drift_aware", &clipper::invariants::DistancePairwiseAndSingle::Params::drift_aware)
-    .def_readwrite("drift_scale_sigma", &clipper::invariants::DistancePairwiseAndSingle::Params::drift_scale_sigma)
-    .def_readwrite("drift_scale", &clipper::invariants::DistancePairwiseAndSingle::Params::drift_scale)
-    .def_readwrite("cos_feature_dim", &clipper::invariants::DistancePairwiseAndSingle::Params::cos_feature_dim)
-    .def_readwrite("cosine_weight", &clipper::invariants::DistancePairwiseAndSingle::Params::cosine_weight)
-    .def_readwrite("cosine_min", &clipper::invariants::DistancePairwiseAndSingle::Params::cosine_min)
-    .def_readwrite("cosine_max", &clipper::invariants::DistancePairwiseAndSingle::Params::cosine_max);
-
-  //
-  // Distance Semantics Similarity
-  //
-  py::class_<DistanceSemanticSimilarity, DistancePairwiseAndSingle, PairwiseAndSingleInvariant, PyPairwiseAndSingleInvariant<DistanceSemanticSimilarity>, std::shared_ptr<DistanceSemanticSimilarity>> distsemanticsimilarity(m, "DistanceSemanticSimilarity");
-  distsemanticsimilarity.def(py::init<const DistancePairwiseAndSingle::Params&>());
-
+    .def_readwrite("point_dim", &clipper::invariants::ROMAN::Params::point_dim)
+    .def_readwrite("ratio_feature_dim", &clipper::invariants::ROMAN::Params::ratio_feature_dim)
+    .def_readwrite("cos_feature_dim", &clipper::invariants::ROMAN::Params::cos_feature_dim)
+    .def_readwrite("fusion_method", &clipper::invariants::ROMAN::Params::fusion_method)
+    .def_readwrite("sigma", &clipper::invariants::ROMAN::Params::sigma)
+    .def_readwrite("epsilon", &clipper::invariants::ROMAN::Params::epsilon)
+    .def_readwrite("mindist", &clipper::invariants::ROMAN::Params::mindist)
+    .def_readwrite("distance_weight", &clipper::invariants::ROMAN::Params::distance_weight)
+    .def_readwrite("ratio_weight", &clipper::invariants::ROMAN::Params::ratio_weight)
+    .def_readwrite("cosine_weight", &clipper::invariants::ROMAN::Params::cosine_weight)
+    .def_readwrite("ratio_epsilon", &clipper::invariants::ROMAN::Params::ratio_epsilon)
+    .def_readwrite("cosine_min", &clipper::invariants::ROMAN::Params::cosine_min)
+    .def_readwrite("cosine_max", &clipper::invariants::ROMAN::Params::cosine_max)
+    .def_readwrite("gravity_guided", &clipper::invariants::ROMAN::Params::gravity_guided)
+    .def_readwrite("drift_aware", &clipper::invariants::ROMAN::Params::drift_aware)
+    .def_readwrite("drift_scale_sigma", &clipper::invariants::ROMAN::Params::drift_scale_sigma)
+    .def_readwrite("drift_scale", &clipper::invariants::ROMAN::Params::drift_scale);
 
   //
   // Euclidean Distance

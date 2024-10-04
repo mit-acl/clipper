@@ -9,4 +9,4 @@
 
 #include "clipper/invariants/euclidean_distance.h"
 #include "clipper/invariants/pointnormal_distance.h"
-#include "clipper/invariants/distance_semantic_similarity.h"
+#include "clipper/invariants/roman.h"

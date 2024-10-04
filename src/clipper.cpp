@@ -100,6 +100,12 @@ void CLIPPERPairwiseAndSingle::scorePairwiseAndSingleConsistency(const invariant
       // violates distinctness constraint
       continue;
     }
+    
+    if (single_sim(i) < params_.affinityeps || 
+        single_sim(j) < params_.affinityeps) {
+      // assumes 0 in a single score means fused score should be 0 too
+      continue;
+    }
 
     //
     // Evaluate the consistency of geometric invariants associated with ei, ej
