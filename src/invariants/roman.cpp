@@ -71,7 +71,7 @@ double ROMAN::pairwise_similarity(const Datum& ai, const Datum& aj,
 double ROMAN::pairwise_single_fusion(
     const double& pair_ij, const double& single_i, const double& single_j)
 {
-  if (params_.ratio_feature_dim > 0 or params_.cos_feature_dim > 0) {
+  if (params_.ratio_feature_dim > 0 || params_.cos_feature_dim > 0) {
     switch (params_.fusion_method) {
       case SimilarityFusionMethod::GEOMETRIC_MEAN: {
         double dist_score_pow = std::pow(pair_ij, params_.distance_weight);
@@ -101,6 +101,10 @@ double ROMAN::single_similarity(const Datum& ai, const Datum& bi)
 {
   double cosine_score_scaled = 0.0;
   double ratio_score = 0.0;
+
+  if (params_.cos_feature_dim == 0 && params_.ratio_feature_dim == 0) {
+    return 1.0; // no features, so return 1.0
+  }
 
   if (params_.cos_feature_dim > 0) {
     const Datum ai_feat = ai.segment(params_.point_dim + params_.ratio_feature_dim, params_.cos_feature_dim);
