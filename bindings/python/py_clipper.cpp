@@ -75,6 +75,7 @@ void pybind_invariants(py::module& m)
       repr << " cosine_min=" << params.cosine_min;
       repr << " cosine_max=" << params.cosine_max;
       repr << " gravity_guided=" << params.gravity_guided;
+      repr << " gravity_unc_ang_rad=" << params.gravity_unc_ang_rad;
       repr << " drift_aware=" << params.drift_aware;
       repr << " drift_scale_sigma=" << params.drift_scale_sigma;
       repr << " drift_scale=" << params.drift_scale;
@@ -95,6 +96,7 @@ void pybind_invariants(py::module& m)
     .def_readwrite("cosine_min", &clipper::invariants::ROMAN::Params::cosine_min)
     .def_readwrite("cosine_max", &clipper::invariants::ROMAN::Params::cosine_max)
     .def_readwrite("gravity_guided", &clipper::invariants::ROMAN::Params::gravity_guided)
+    .def_readwrite("gravity_unc_ang_rad", &clipper::invariants::ROMAN::Params::gravity_unc_ang_rad)
     .def_readwrite("drift_aware", &clipper::invariants::ROMAN::Params::drift_aware)
     .def_readwrite("drift_scale_sigma", &clipper::invariants::ROMAN::Params::drift_scale_sigma)
     .def_readwrite("drift_scale", &clipper::invariants::ROMAN::Params::drift_scale);

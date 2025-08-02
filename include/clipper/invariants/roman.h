@@ -45,6 +45,7 @@ namespace invariants {
       // bool cosine_normalized = false; ///< option to speed up by sending in pre-normalized features
       
       bool gravity_guided = false; ///< whether to use gravity-guided prior
+      double gravity_unc_ang_rad = 0.0; ///< uncertainty adjustment for gravity direction in radians
       
       bool drift_aware = false; ///< experimental drift aware
       bool drift_scale_sigma = false;
@@ -53,7 +54,10 @@ namespace invariants {
   public:
     ROMAN(const Params& params)
     : params_(params) 
-    {}
+    {
+      gravity_unc_ang_cos_ = std::cos(params_.gravity_unc_ang_rad);
+      gravity_unc_ang_sin_ = std::sin(params_.gravity_unc_ang_rad);
+    }
     ~ROMAN() = default;
 
     /**
@@ -91,6 +95,8 @@ namespace invariants {
 
   private:
     Params params_;
+    double gravity_unc_ang_cos_;
+    double gravity_unc_ang_sin_;
   };
 
   using ROMANPtr = std::shared_ptr<ROMAN>;

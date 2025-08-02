@@ -48,11 +48,27 @@ double ROMAN::pairwise_similarity(const Datum& ai, const Datum& aj,
     const double c_xy = std::abs(xy_dist1 - xy_dist2);
     const double c_z = std::abs(z_diff1 - z_diff2);
 
-    if (c_xy > SQRT_TWO_THIRDS*epsilon || c_z > SQRT_ONE_THIRD*epsilon) {
+    double sigma_xy = sigma;
+    double sigma_z = sigma;
+    double epsilon_xy = epsilon;
+    double epsilon_z = epsilon;
+    
+    if (params_.gravity_unc_ang_rad > 0.0) {
+      const double xy_dist_mean = 0.5*(xy_dist1 + xy_dist2);
+      const double z_dist_mean = 0.5*(std::abs(z_diff1) + std::abs(z_diff2));
+
+      // adjust sigma and epsilon based on gravity uncertainty
+      sigma_xy += std::abs(xy_dist_mean * gravity_unc_ang_cos_ - xy_dist_mean);
+      sigma_z += std::abs(z_dist_mean * gravity_unc_ang_sin_);
+      epsilon_xy += std::abs(xy_dist_mean * gravity_unc_ang_cos_ - xy_dist_mean);
+      epsilon_z += std::abs(z_dist_mean * gravity_unc_ang_sin_);
+    }
+
+    if (c_xy > SQRT_TWO_THIRDS*epsilon_xy || c_z > SQRT_ONE_THIRD*epsilon_z) {
       return 0.0;
     } else {
-      return std::exp(-0.5*(c_xy*c_xy/(2.0/3.0*sigma*sigma) + 
-          c_z*c_z/(sigma*sigma/3.0)));
+      return std::exp(-0.5*(c_xy*c_xy/(2.0/3.0*sigma_xy*sigma_xy) + 
+          c_z*c_z/(sigma_z*sigma_z/3.0)));
     }
 
   } else {
