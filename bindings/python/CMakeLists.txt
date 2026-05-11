@@ -6,7 +6,8 @@ set_target_properties(py_clipper PROPERTIES OUTPUT_NAME "clipperpy")
 set_target_properties(py_clipper PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${PYPKG_DIR}")
 
 # copy setup.py file binary dir for install with: pip install .
-configure_file(setup.py.in ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
+# configure_file(setup.py.in ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
+configure_file(pyproject.toml.in ${CMAKE_CURRENT_BINARY_DIR}/pyproject.toml)
 
 # Create the Python package -- Note that "." is used to conform to PEP 328
 file(WRITE "${PYPKG_DIR}/__init__.py"
@@ -31,7 +32,8 @@ set(PKGSTR clipperpy-py3-${DIST}-${PROJECT_VERSION})
 add_custom_target(pypkg
     DEPENDS py_clipper
     COMMAND ${CMAKE_COMMAND} -E make_directory ${PKGSTR}
-    COMMAND ${CMAKE_COMMAND} -E copy setup.py ${PKGSTR}/
+    # COMMAND ${CMAKE_COMMAND} -E copy setup.py ${PKGSTR}/
+    COMMAND ${CMAKE_COMMAND} -E copy pyproject.toml ${PKGSTR}/
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PYPKG_DIR} ${PKGSTR}/clipperpy
     COMMAND ${CMAKE_COMMAND} -E tar zcvf ${PKGSTR}.tar.gz ${PKGSTR}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
